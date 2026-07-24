@@ -55,6 +55,37 @@ const serviceProviderRequirementSchema = new mongoose.Schema({
     {
       name: String,
       url: String,
+      type: {
+        type: String,
+        enum: ['original', 'enhancement'],
+        default: 'original',
+      },
+      round: {           // which enhancement round added this file (0 = original)
+        type: Number,
+        default: 0,
+      },
+    },
+  ],
+  // Full history of each enhancement round — stored on the same document
+  enhancementHistory: [
+    {
+      round:       { type: Number, required: true },
+      description: { type: String, default: '' },
+      submittedAt: { type: Date,   default: Date.now },
+      submittedBy: { type: mongoose.Schema.ObjectId, ref: 'User', autopopulate: true },
+    },
+  ],
+  // Complete audit trail — every action recorded for accountability
+  activityLog: [
+    {
+      action: {
+        type: String,
+        enum: ['submitted', 'approved', 'rejected', 'enhancement_submitted', 'approval_reversed'],
+        required: true,
+      },
+      performedBy: { type: mongoose.Schema.ObjectId, ref: 'User', autopopulate: true },
+      performedAt: { type: Date, default: Date.now },
+      note:        { type: String, default: '' },  // reason / description for this action
     },
   ],
   status: {
@@ -94,6 +125,10 @@ const serviceProviderRequirementSchema = new mongoose.Schema({
   },
   rejectedAt: {
     type: Date,
+  },
+  rejectionReason: {
+    type: String,
+    default: '',
   },
   submittedAt: {
     type: Date,

@@ -145,9 +145,11 @@ router.route('/serviceprovider/filter').get(catchErrors(serviceProviderControlle
 router.route('/serviceprovider-requirement/login').post(catchErrors(serviceProviderRequirementController.login));
 router.route('/serviceprovider-requirement/create').post(catchErrors(serviceProviderRequirementController.create));
 router.route('/serviceprovider-requirement/list').get(catchErrors(serviceProviderRequirementController.list));
+router.route('/serviceprovider-requirement/mine').get(catchErrors(serviceProviderRequirementController.listMine));
 router.route('/serviceprovider-requirement/read/:id').get(catchErrors(serviceProviderRequirementController.read));
 router.route('/serviceprovider-requirement/approve/:id').patch(catchErrors(serviceProviderRequirementController.approve));
 router.route('/serviceprovider-requirement/reject/:id').patch(catchErrors(serviceProviderRequirementController.reject));
+router.route('/serviceprovider-requirement/reverse/:id').patch(catchErrors(serviceProviderRequirementController.reverseApproval));
 router.route('/serviceprovider-requirement/enhancement/:id').post(catchErrors(serviceProviderRequirementController.enhancement));
 router.route('/serviceprovider-requirement/delete/:id').delete(catchErrors(serviceProviderRequirementController.delete));
 

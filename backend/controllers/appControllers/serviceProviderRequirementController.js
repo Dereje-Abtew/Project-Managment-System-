@@ -148,6 +148,16 @@ exports.create = async (req, res) => {
     // serviceProvider is optional now; if provided we do not block creation when not found
 
     const result = await new ServiceProviderRequirement(payload).save();
+
+    // Log the initial submission
+    result.activityLog.push({
+      action:      'submitted',
+      performedBy: req.user ? req.user._id : undefined,
+      performedAt: new Date(),
+      note:        'Requirement submitted.',
+    });
+    await result.save();
+
     return res.status(200).json({ success: true, result, message: 'Requirement submitted successfully.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
@@ -162,6 +172,22 @@ exports.list = async (req, res) => {
 
     const result = await ServiceProviderRequirement.find({ removed: false }).sort({ created: -1 });
     return res.status(200).json({ success: true, result, message: 'Requirements fetched successfully.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
+  }
+};
+
+// Returns requirements submitted by the current user — includes enhancements they authored
+exports.listMine = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
+    const result = await ServiceProviderRequirement.find({
+      removed: false,
+      submittedBy: req.user._id,
+    }).sort({ created: -1 });
+    return res.status(200).json({ success: true, result, message: 'Your requirements fetched successfully.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
   }
@@ -195,6 +221,14 @@ exports.approve = async (req, res) => {
     requirement.approvedBy = req.user ? req.user._id : undefined;
     requirement.approvedAt = new Date();
     requirement.updated = new Date();
+
+    // Log the approval
+    requirement.activityLog.push({
+      action:      'approved',
+      performedBy: req.user ? req.user._id : undefined,
+      performedAt: new Date(),
+      note:        req.body.approvalNotes || 'Requirement approved.',
+    });
 
     await requirement.save();
     // If requirement is linked to a project, create a task from it (if approver has project create permission)
@@ -264,14 +298,31 @@ exports.reject = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to reject requirements.' });
     }
 
+    const rejectionReason = (req.body.rejectionReason || '').trim();
+    if (!rejectionReason || rejectionReason.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rejection reason is required and must be at least 10 characters.',
+      });
+    }
+
     const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
     requirement.status = 'rejected';
+    requirement.rejectionReason = rejectionReason;
     requirement.approvalNotes = req.body.approvalNotes || requirement.approvalNotes;
     requirement.rejectedBy = req.user ? req.user._id : undefined;
     requirement.rejectedAt = new Date();
     requirement.updated = new Date();
+
+    // Log the rejection
+    requirement.activityLog.push({
+      action:      'rejected',
+      performedBy: req.user ? req.user._id : undefined,
+      performedAt: new Date(),
+      note:        rejectionReason,
+    });
 
     await requirement.save();
     return res.status(200).json({ success: true, result: requirement, message: 'Requirement rejected successfully.' });
@@ -280,37 +331,109 @@ exports.reject = async (req, res) => {
   }
 };
 
-exports.enhancement = async (req, res) => {
+// ── Reverse an approval (accountability correction) ────────────────────────
+exports.reverseApproval = async (req, res) => {
   try {
     if (req.user && !(await hasPermission(req, 'update'))) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to reverse approvals.' });
+    }
+
+    const reverseReason = (req.body.reverseReason || '').trim();
+    if (!reverseReason || reverseReason.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'A reason for reversing the approval is required (at least 10 characters).',
+      });
+    }
+
+    const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
+
+    if (requirement.status !== 'approved') {
+      return res.status(400).json({ success: false, message: 'Only approved requirements can have their approval reversed.' });
+    }
+
+    // Revert to rejected so the sender can see and optionally enhance
+    requirement.status          = 'rejected';
+    requirement.rejectionReason = reverseReason;
+    requirement.rejectedBy      = req.user ? req.user._id : undefined;
+    requirement.rejectedAt      = new Date();
+    // Clear the approval fields
+    requirement.approvedBy      = undefined;
+    requirement.approvedAt      = undefined;
+    requirement.updated         = new Date();
+
+    // Record in audit log
+    if (!Array.isArray(requirement.activityLog)) requirement.activityLog = [];
+    requirement.activityLog.push({
+      action:      'approval_reversed',
+      performedBy: req.user ? req.user._id : undefined,
+      performedAt: new Date(),
+      note:        reverseReason,
+    });
+
+    await requirement.save();
+    return res.status(200).json({ success: true, result: requirement, message: 'Approval reversed successfully.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
+  }
+};
+
+exports.enhancement = async (req, res) => {
+  try {
+    if (req.user && !(await hasPermission(req, 'create'))) {
       return res.status(403).json({ success: false, message: 'You do not have permission to submit enhancements.' });
     }
 
     const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
-    const enhancement = new ServiceProviderRequirement({
-      ...req.body,
-      serviceProvider: requirement.serviceProvider,
-      project: requirement.project,
-      parentRequirement: requirement._id,
-      isEnhancement: true,
-      submittedBy: req.user ? req.user._id : undefined,
-      submittedByType: req.user ? 'internal_user' : 'service_provider',
-      senderName: req.body.senderName || 'System Update',
-      senderEmail: req.body.senderEmail || '',
-      senderPhone: req.body.senderPhone || '',
-      status: 'enhancement_pending',
-      title: req.body.title || `Enhancement for ${requirement.title}`,
+    if (requirement.status !== 'rejected') {
+      return res.status(400).json({ success: false, message: 'Only rejected requirements can be enhanced.' });
+    }
+
+    // Determine round number (1-based)
+    const round = (Array.isArray(requirement.enhancementHistory) ? requirement.enhancementHistory.length : 0) + 1;
+
+    // Tag new files with type:'enhancement' and the current round number
+    const newAttachments = (Array.isArray(req.body.attachments) ? req.body.attachments : [])
+      .map((a) => ({ name: a.name, url: a.url, type: 'enhancement', round }));
+
+    // Append new files to the existing attachments (originals stay untouched)
+    requirement.attachments.push(...newAttachments);
+
+    // Record this round in history
+    if (!Array.isArray(requirement.enhancementHistory)) requirement.enhancementHistory = [];
+    requirement.enhancementHistory.push({
+      round,
       description: req.body.description || '',
+      submittedAt: new Date(),
+      submittedBy: req.user ? req.user._id : undefined,
     });
 
-    await enhancement.save();
-    requirement.status = 'enhancement_pending';
-    requirement.updated = new Date();
+    // Log the enhancement in the audit trail
+    if (!Array.isArray(requirement.activityLog)) requirement.activityLog = [];
+    requirement.activityLog.push({
+      action:      'enhancement_submitted',
+      performedBy: req.user ? req.user._id : undefined,
+      performedAt: new Date(),
+      note:        `Enhancement round #${round}: ${req.body.description || ''}`,
+    });
+
+    // Update the record in place — same row, no new document
+    requirement.isEnhancement      = true;
+    requirement.status              = 'enhancement_pending';
+    requirement.description         = req.body.description || requirement.description;
+    requirement.enhancementSummary  = req.body.description || requirement.enhancementSummary;
+    requirement.updated             = new Date();
+    // Clear previous rejection so approver sees a clean state
+    requirement.rejectionReason     = '';
+    requirement.rejectedBy          = undefined;
+    requirement.rejectedAt          = undefined;
+
     await requirement.save();
 
-    return res.status(200).json({ success: true, result: enhancement, message: 'Enhancement request submitted successfully.' });
+    return res.status(200).json({ success: true, result: requirement, message: 'Enhancement submitted successfully.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
   }

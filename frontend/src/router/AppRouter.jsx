@@ -120,7 +120,7 @@ export default function AppRouter() {
           {alwaysAllowedRouteElements}
           <PublicRoute path="/login" render={() => <Redirect to="/" />} exact />
           <Route component={Logout} path="/logout" exact />
-          <Route path="*" component={UnAuthorized} render={() => <Redirect to="/unauthorized" />} />
+          <Route path="*" component={UnAuthorized} />
         </Switch>
       </AnimatePresence>
     </Suspense>

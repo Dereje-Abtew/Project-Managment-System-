@@ -25,11 +25,11 @@ export const routesConfig = [
   },
   {
     path: '/send-requirement',
-    component: 'ServiceProvider/RequirementWorkflow',
+    component: 'ServiceProvider/SendRequirement',
   },
   {
     path: '/approve-requirement',
-    component: 'ServiceProvider/RequirementWorkflow',
+    component: 'ServiceProvider/ApproveRequirement',
   },
   {
     path: '/chief',
