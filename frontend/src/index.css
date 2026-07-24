@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ @keyframes typewriter {
+     from {
+         width: 0;
+     }
+
+     to {
+         width: 100%;
+     }
+ }
+
+ .animate-typewriter {
+     overflow: hidden;
+     white-space: nowrap;
+     animation: typewriter 1s steps(30) infinite;
+ }
+ 
+
+ 
+.link-item-clickable {
+    margin-bottom: 14px;
+    background-color: rgb(241,242,244);
+    border-radius: 7px !important;
+    cursor: pointer; 
+    border: 'none',
+ }
+.link-item-clickable:hover {
+    border: #025aa2 solid 1px !important;
+
+}
+
+::-webkit-scrollbar {
+    width: 7px;
+
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #b8b6b6;
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #858585;
+} .ant-carousel .slick-dots li button {
+     width: 10px;
+     height: 10px;
+     background-color: black;
+      border: none;
+     border-radius: 50%;
+     margin-top: -5px;
+ }
+
+ .ant-carousel .slick-dots li.slick-active button {
+     background-color: #025aa2;
+ }
+
+ 
+ 
+
+  .hoverable-table tbody tr:hover {
+    cursor: pointer;  
+  }  
+
+/* General Report — highlight delayed task rows */
+.ant-table-row-danger > td {
+  background-color: #fff1f0 !important;
+}
+.ant-table-row-danger:hover > td {
+  background-color: #ffccc7 !important;
+}

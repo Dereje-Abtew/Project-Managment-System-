@@ -1,0 +1,152 @@
+// ─── Brand colours ────────────────────────────────────────────────────────────
+@green:              #064E3B;
+@yellow:             #F1B31C;
+@sidebar-bg:         @green;
+@sidebar-active-bg:  @yellow;
+@sidebar-hover-bg:   rgba(241, 179, 28, 0.15);
+@sidebar-text:       rgba(255, 255, 255, 0.90);
+@sidebar-icon:       rgba(255, 255, 255, 0.60);
+@sidebar-active-txt: #1a1a00;
+
+// ─── Sider shell ──────────────────────────────────────────────────────────────
+.navigation {
+  height: 100vh !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: @sidebar-bg !important;
+  border-right: none !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.28);
+  flex-shrink: 0;
+
+  &.ant-layout-sider { background: @sidebar-bg !important; }
+
+  .logo,
+  > .ant-layout-sider-children > div:first-child {
+    background: #ffffff !important;
+  }
+}
+
+// ─── Menu container ───────────────────────────────────────────────────────────
+.navigation .ant-menu,
+.navigation .ant-menu-dark {
+  background: @sidebar-bg !important;
+  border-right: none !important;
+  color: @sidebar-text;
+}
+
+// ─── Normal menu items ────────────────────────────────────────────────────────
+.navigation .ant-menu-item {
+  color: @sidebar-text !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  width: 100% !important;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  height: 44px !important;
+  line-height: 44px !important;
+
+  .anticon { color: @sidebar-icon !important; font-size: 16px !important; }
+  a { color: @sidebar-text !important; }
+
+  &:hover {
+    background: @sidebar-hover-bg !important;
+    color: @yellow !important;
+    .anticon { color: @yellow !important; }
+    a { color: @yellow !important; }
+  }
+}
+
+// ─── Selected / active item ───────────────────────────────────────────────────
+.navigation .ant-menu-item-selected,
+.navigation .ant-menu-dark .ant-menu-item-selected {
+  background: @sidebar-active-bg !important;
+  color: @sidebar-active-txt !important;
+  font-weight: 700;
+
+  .anticon { color: @sidebar-active-txt !important; }
+  a { color: @sidebar-active-txt !important; }
+  &::after { display: none !important; }
+}
+
+// ─── Sub-menu title ───────────────────────────────────────────────────────────
+.navigation .ant-menu-submenu-title {
+  color: @sidebar-text !important;
+  font-size: 14px;
+  font-weight: 500;
+  height: 44px !important;
+  line-height: 44px !important;
+  transition: background 0.15s, color 0.15s;
+
+  .anticon { color: @sidebar-icon !important; }
+
+  &:hover {
+    background: @sidebar-hover-bg !important;
+    color: @yellow !important;
+    .anticon { color: @yellow !important; }
+  }
+}
+
+.navigation .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: @yellow !important;
+  .anticon { color: @yellow !important; }
+}
+
+.navigation .ant-menu-submenu-arrow {
+  color: rgba(255, 255, 255, 0.40) !important;
+}
+
+.navigation .ant-menu-sub {
+  background: rgba(0, 0, 0, 0.22) !important;
+
+  .ant-menu-item {
+    padding-left: 40px !important;
+    font-size: 13px;
+    height: 40px !important;
+    line-height: 40px !important;
+  }
+}
+
+// ─── Hide built-in trigger ────────────────────────────────────────────────────
+.ant-layout-sider-trigger { display: none !important; }
+
+// ─── Wrappers ─────────────────────────────────────────────────────────────────
+.sidebar-wraper { display: block; }
+.mobile-sidebar-wraper { display: none; }
+.mobile-sidebar-wraper .ant-drawer-body {
+  padding: 0 !important;
+  background: @sidebar-bg !important;
+}
+.ant-btn.mobile-sidebar-btn { display: none; }
+
+// ─── Collapsed icon-only ──────────────────────────────────────────────────────
+.ant-layout-sider-collapsed {
+  .ant-menu-item {
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    .anticon { margin: 0 auto !important; }
+  }
+  .ant-menu-submenu-title {
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media only screen and (max-width: 600px) {
+  .sidebar-wraper        { display: none; }
+  .mobile-sidebar-wraper { display: block; }
+  .ant-btn.mobile-sidebar-btn {
+    display: flex !important;
+    position: fixed;
+    top: 14px;
+    left: 8px;
+    z-index: 1100;
+    color: #fff;
+    border: none;
+    background: transparent;
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,49 @@
+// ─── Ant Layout.Header wrapper ───────────────────────────────────────────────
+.ant-layout-header {
+  padding: 0 !important;
+  height: 56px !important;
+  line-height: 56px !important;
+  background: #F1B31C !important;
+}
+
+// ─── Profile dropdown ────────────────────────────────────────────────────────
+.profileDropdown {
+  min-width: 230px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+
+  .pad15 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #fefce8 0%, #fff 100%);
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.18s;
+    &:hover { background: #fef9c3; }
+  }
+
+  .info {
+    p { margin-bottom: 2px; font-size: 13px; color: #6b7280; }
+    p.strong { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+  }
+
+  .line { border-top: 1px solid #f0f0f0; }
+
+  .ant-menu-item {
+    font-size: 14px;
+    padding: 8px 16px !important;
+    &:hover {
+      background: #fef9c3 !important;
+      color: #064e3b !important;
+    }
+  }
+}
+
+// ─── Scrollbar ────────────────────────────────────────────────────────────────
+.notification::-webkit-scrollbar       { width: 4px; }
+.notification::-webkit-scrollbar-thumb { background: #F1B31C; border-radius: 4px; }
