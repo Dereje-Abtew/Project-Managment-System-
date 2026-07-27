@@ -166,4 +166,12 @@ const projectTodoCommentController = require('@/controllers/appControllers/proje
 router.route('/project/:id/task/:taskId/comment').post(catchErrors(projectTodoCommentController.add));
 router.route('/project/:id/task/:taskId/comment/:commentId').delete(catchErrors(projectTodoCommentController.remove));
 
+// ── Requirement Template routes ────────────────────────────────────────────
+const requirementTemplateController = require('@/controllers/appControllers/requirementTemplateController');
+router.route('/requirement-template/create').post(catchErrors(requirementTemplateController.create));
+router.route('/requirement-template/list').get(catchErrors(requirementTemplateController.list));
+router.route('/requirement-template/list-by-provider/:providerId').get(catchErrors(requirementTemplateController.listByProvider));
+router.route('/requirement-template/read/:id').get(catchErrors(requirementTemplateController.read));
+router.route('/requirement-template/delete/:id').delete(catchErrors(requirementTemplateController.delete));
+
 module.exports = router;

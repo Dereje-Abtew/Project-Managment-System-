@@ -15,6 +15,8 @@ const erpApiRouter = require('./routes/appRoutes/appApi');
 const publicProjectRoutes = require('./routes/publicRoutes/projectRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const serviceProviderRequirementController = require('./controllers/appControllers/serviceProviderRequirementController');
+// Register RequirementTemplate model so mongoose.model() calls resolve correctly
+require('./models/appModels/RequirementTemplate');
 
 const app = express();
 
