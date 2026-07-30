@@ -120,6 +120,9 @@ export async function AuthorizedRoutes(fullload, currentUser) {
             if (resourceName === 'approverequirement' || resourceName === 'approve requirement') {
               permissionNames.push('/approve-requirement');
             }
+            if (resourceName === 'requirementtemplate' || resourceName === 'requirement template') {
+              permissionNames.push('/requirement-template');
+            }
           }
           permissionNames.push(`/profile`);
           permissionNames.push(`/logout`);

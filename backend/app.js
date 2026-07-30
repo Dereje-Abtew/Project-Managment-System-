@@ -13,10 +13,13 @@ const errorHandlers = require('./handlers/errorHandlers');
 const coreAuthRouter = require('./routes/coreRoutes/coreAuth');
 const erpApiRouter = require('./routes/appRoutes/appApi');
 const publicProjectRoutes = require('./routes/publicRoutes/projectRoutes');
+const spPortalRoutes = require('./routes/publicRoutes/spPortalRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const serviceProviderRequirementController = require('./controllers/appControllers/serviceProviderRequirementController');
 // Register RequirementTemplate model so mongoose.model() calls resolve correctly
 require('./models/appModels/RequirementTemplate');
+// Register UATSignOff model (needed by spPortalRoutes before appApi loads)
+require('./models/appModels/UATSignOff');
 
 const app = express();
 
@@ -67,6 +70,9 @@ app.use((req, res, next) => {
 // Public routes — no auth required
 app.use('/api/public', publicProjectRoutes);
 app.post('/api/serviceprovider-requirement/login', serviceProviderRequirementController.login);
+
+// Service Provider Portal — uses its own SP JWT auth (not the internal user JWT)
+app.use('/api/sp-portal', spPortalRoutes);
 
 // Core auth routes — signature check only (login)
 app.use('/api', isValidSignature, coreAuthRouter);

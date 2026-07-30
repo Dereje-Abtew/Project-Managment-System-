@@ -23,6 +23,7 @@ import {
   DownloadOutlined,
   EyeOutlined,
   FileOutlined,
+  FileTextOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
 import request from '@/request/request';
@@ -187,6 +188,9 @@ export default function ApproveRequirement() {
   const [reverseSubmitting, setReverseSubmitting] = useState(false);
   const [reverseForm]  = Form.useForm();
 
+  // Templates indexed by serviceProvider id — for the Template column
+  const [templateMap, setTemplateMap] = useState({});
+
   // ── load ───────────────────────────────────────────────────────────────────
   const load = async () => {
     setLoading(true);
@@ -199,7 +203,30 @@ export default function ApproveRequirement() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, []);
+
+  // ── load templates → build id→template map ─────────────────────────────────
+  const loadTemplates = async () => {
+    try {
+      const res = await request.list({ entity: 'requirement-template' });
+      if (Array.isArray(res?.result)) {
+        const map = {};
+        let globalTemplate = null;
+        for (const t of res.result) {
+          if (t.isGlobal) {
+            if (!globalTemplate) globalTemplate = t;  // most recent global
+          } else {
+            const spId = t.serviceProvider?._id || t.serviceProvider;
+            if (spId && !map[spId]) map[spId] = t;    // specific wins
+          }
+        }
+        // Global template stored under sentinel — fallback for any provider
+        if (globalTemplate) map['__global__'] = globalTemplate;
+        setTemplateMap(map);
+      }
+    } catch { /* non-fatal */ }
+  };
+
+  useEffect(() => { load(); loadTemplates(); }, []);
 
   // ── approve ────────────────────────────────────────────────────────────────
   const handleApprove = async (record) => {
@@ -344,6 +371,49 @@ export default function ApproveRequirement() {
       render: (_, r) => fullName(r.rejectedBy),
     },
     {
+      // Reference template column — shows downloadable template for this row's service provider
+      title: (
+        <Tooltip title="Reference template for the service provider linked to this requirement">
+          <b>Template</b>
+        </Tooltip>
+      ),
+      key: 'template',
+      width: 210,
+      render: (_, r) => {
+        const spId = r.serviceProvider?._id || r.serviceProvider;
+        // Specific template wins; fall back to global template if none specific
+        const tmpl = spId
+          ? (templateMap[spId] || templateMap['__global__'] || null)
+          : (templateMap['__global__'] || null);
+        if (!tmpl) return <Text type="secondary">—</Text>;
+        return (
+          <Tooltip title={`Download: ${tmpl.file?.name}${tmpl.isGlobal ? ' (Global — applies to all providers)' : ''}`}>
+            <Button
+              type="link"
+              size="small"
+              icon={<FileTextOutlined />}
+              style={{
+                color: tmpl.isGlobal ? '#722ed1' : '#1a5c38',
+                padding: 0, maxWidth: 200,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}
+              onClick={() => {
+                const link = document.createElement('a');
+                link.href = tmpl.file.url;
+                link.download = tmpl.file.name;
+                link.click();
+              }}
+            >
+              {tmpl.title || tmpl.file?.name}
+              {tmpl.isGlobal && (
+                <Tag color="purple" style={{ fontSize:9, padding:'0 3px', marginLeft:4 }}>Global</Tag>
+              )}
+            </Button>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: <b>Action</b>,
       key: 'action',
       width: 160,
@@ -482,6 +552,39 @@ export default function ApproveRequirement() {
             <Descriptions.Item label="Sender">{selected.senderName}</Descriptions.Item>
             <Descriptions.Item label="Email">{selected.senderEmail || '—'}</Descriptions.Item>
             <Descriptions.Item label="Phone">{selected.senderPhone || '—'}</Descriptions.Item>
+            {selected.serviceProvider && (
+              <Descriptions.Item label="Service Provider">
+                <Tag color="geekblue" style={{ fontWeight: 500 }}>
+                  {selected.serviceProvider?.name || '—'}
+                </Tag>
+                {(() => {
+                  const spId = selected.serviceProvider?._id || selected.serviceProvider;
+                  // Specific template wins; fall back to global
+                  const tmpl = spId
+                    ? (templateMap[spId] || templateMap['__global__'] || null)
+                    : (templateMap['__global__'] || null);
+                  if (!tmpl) return null;
+                  return (
+                    <Tooltip title={`Download reference template: ${tmpl.file?.name}${tmpl.isGlobal ? ' (Global)' : ''}`}>
+                      <Button
+                        type="link"
+                        size="small"
+                        icon={<FileTextOutlined />}
+                        style={{ color: tmpl.isGlobal ? '#722ed1' : '#1a5c38', marginLeft: 8 }}
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = tmpl.file.url;
+                          link.download = tmpl.file.name;
+                          link.click();
+                        }}
+                      >
+                        {tmpl.isGlobal ? 'View Global Template' : 'View Template'}
+                      </Button>
+                    </Tooltip>
+                  );
+                })()}
+              </Descriptions.Item>
+            )}
             <Descriptions.Item label="Submitted At">
               {new Date(selected.submittedAt).toLocaleString()}
             </Descriptions.Item>

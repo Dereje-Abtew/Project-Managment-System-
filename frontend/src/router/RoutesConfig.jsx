@@ -32,6 +32,10 @@ export const routesConfig = [
     component: 'ServiceProvider/ApproveRequirement',
   },
   {
+    path: '/requirement-template',
+    component: 'ServiceProvider/RequirementTemplate',
+  },
+  {
     path: '/chief',
     component: 'Chief/index',
   },
@@ -141,6 +145,26 @@ export const routesConfig = [
   {
     path: '/project/:id',
     component: 'ProjectTodo/TodoRead',
+  },
+  {
+    path: '/sp-dashboard',
+    component: 'ServiceProvider/SPUATDashboard',
+  },
+  {
+    path: '/uat-signoff',
+    component: 'UATSignOff/index',
+  },
+  {
+    path: '/uat-signoff/create',
+    component: 'UATSignOff/index',
+  },
+  {
+    path: '/uat-signoff/read/:id',
+    component: 'UATSignOff/index',
+  },
+  {
+    path: '/uat-signoff/update/:id',
+    component: 'UATSignOff/index',
   },
 
   {

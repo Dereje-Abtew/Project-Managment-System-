@@ -94,12 +94,6 @@ exports.create = async (req, res) => {
 // ── GET /requirement-template/list ───────────────────────────────────────────
 exports.list = async (req, res) => {
   try {
-    if (!(await hasPermission(req, 'read'))) {
-      return res.status(403).json({
-        success: false,
-        message: 'You do not have permission to view requirement templates.',
-      });
-    }
     const result = await RequirementTemplate.find({ removed: false }).sort({ created: -1 });
     return res.status(200).json({ success: true, result, message: 'Templates fetched successfully.' });
   } catch (err) {

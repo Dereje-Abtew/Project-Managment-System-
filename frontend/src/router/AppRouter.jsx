@@ -99,9 +99,13 @@ export default function AppRouter() {
       />
     ));
 
-  // Always allow /profile and /logout for any logged-in user
+  // Always allow /profile, /logout, /uat-signoff and /sp-dashboard for any logged-in user
   const alwaysAllowedRouteElements = routesConfig
-    .filter((routeItem) => ['/profile', '/logout'].includes(routeItem.path))
+    .filter((routeItem) =>
+      ['/profile', '/logout'].includes(routeItem.path) ||
+      routeItem.path.startsWith('/uat-signoff') ||
+      routeItem.path.startsWith('/sp-dashboard')
+    )
     .filter((routeItem) => !authorizedRouteElements.some((el) => el.key === routeItem.path))
     .map((routeItem) => (
       <PrivateRoute

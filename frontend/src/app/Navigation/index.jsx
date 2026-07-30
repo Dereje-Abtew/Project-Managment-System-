@@ -105,20 +105,6 @@ function Sidebar({ forceExpanded = false }) {
     if (!resourceResult) MY_SIDEBAR_MENU.push({ url: '/profile', name: 'Profile' });
   }
 
-  const hasTaskShortcutAccess = !resourceResult || (Array.isArray(resourceResult) && resourceResult.some((resource) => ['Project', 'Projects'].includes(resource.name)));
-  if (hasTaskShortcutAccess) {
-    const projectIndex = MY_SIDEBAR_MENU.findIndex((item) => item.name === 'Project');
-    const dashboardIndex = MY_SIDEBAR_MENU.findIndex((item) => item.name === 'Dashboard');
-    const taskShortcut = { url: '/project', key: '/project-task', name: 'Task' };
-    if (projectIndex >= 0) {
-      MY_SIDEBAR_MENU.splice(projectIndex + 1, 0, taskShortcut);
-    } else if (dashboardIndex >= 0) {
-      MY_SIDEBAR_MENU.splice(dashboardIndex + 1, 0, taskShortcut);
-    } else {
-      MY_SIDEBAR_MENU.unshift(taskShortcut);
-    }
-  }
-
   // ── Sidebar widths ───────────────────────────────────────────────────────
   const EXPANDED_W  = 200;
   const COLLAPSED_W = 56;   // icon-only width — same as header hamburger button

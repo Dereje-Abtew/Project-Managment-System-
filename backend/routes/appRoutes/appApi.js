@@ -174,4 +174,17 @@ router.route('/requirement-template/list-by-provider/:providerId').get(catchErro
 router.route('/requirement-template/read/:id').get(catchErrors(requirementTemplateController.read));
 router.route('/requirement-template/delete/:id').delete(catchErrors(requirementTemplateController.delete));
 
+const uatSignOffController = require('@/controllers/appControllers/uatSignOffController');
+router.route('/uat-signoff/list').get(catchErrors(uatSignOffController.list));
+router.route('/uat-signoff/search').get(catchErrors(uatSignOffController.search));
+router.route('/uat-signoff/filter').get(catchErrors(uatSignOffController.filter));
+router.route('/uat-signoff/by-project/:projectId').get(catchErrors(uatSignOffController.listByProject));
+router.route('/uat-signoff/by-provider/:providerId').get(catchErrors(uatSignOffController.listByProvider));
+router.route('/uat-signoff/create').post(catchErrors(uatSignOffController.create));
+router.route('/uat-signoff/read/:id').get(catchErrors(uatSignOffController.read));
+router.route('/uat-signoff/update/:id').patch(catchErrors(uatSignOffController.update));
+router.route('/uat-signoff/delete/:id').delete(catchErrors(uatSignOffController.delete));
+router.route('/uat-signoff/:id/respond').patch(catchErrors(uatSignOffController.respond));
+router.route('/uat-signoff/:id/attach-pdf').patch(catchErrors(uatSignOffController.attachPdf));
+
 module.exports = router;

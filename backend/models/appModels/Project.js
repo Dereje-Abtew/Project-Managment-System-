@@ -377,6 +377,13 @@ const projectSchema = new mongoose.Schema({
       },
     },
   ],
+  uatReports: [
+    {
+      name: { type: String, default: '' },
+      url: { type: String, default: '' },
+      generatedAt: { type: Date, default: Date.now },
+    },
+  ],
   priority: {
     type: String,
     default: 'normal',

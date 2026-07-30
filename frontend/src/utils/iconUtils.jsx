@@ -11,6 +11,11 @@ import {
   TeamOutlined,
   BankOutlined,
   BarChartOutlined,
+  SendOutlined,
+  CheckSquareOutlined,
+  FileTextOutlined,
+  FileDoneOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 
 export const getIconComponent = (iconName) => {
@@ -39,6 +44,16 @@ export const getIconComponent = (iconName) => {
       return <BarChartOutlined />;
     case 'Service Provider':
       return <BankOutlined />;
+    case 'Send Requirement':
+      return <SendOutlined />;
+    case 'Approve Requirement':
+      return <CheckSquareOutlined />;
+    case 'Requirement Template':
+      return <FileTextOutlined />;
+    case 'UAT Sign Off':
+      return <FileDoneOutlined />;
+    case 'SP UAT Portal':
+      return <SafetyCertificateOutlined />;
     default:
       return <MenuOutlined />;
   }

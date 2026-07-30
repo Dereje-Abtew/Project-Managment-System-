@@ -74,3 +74,137 @@
 .ant-table-row-danger:hover > td {
   background-color: #ffccc7 !important;
 }
+
+/* ==========================================================================
+   PREMIUM GLOBAL ANT DESIGN OVERRIDES
+   ========================================================================== */
+
+/* --- TABLES --- */
+.ant-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 1px;
+}
+
+.ant-table {
+  background: transparent !important;
+  font-family: 'Inter', 'Roboto', sans-serif;
+}
+
+.ant-table-thead > tr > th {
+  background-color: #f8fafc !important; /* light sleek slate */
+  color: #475569 !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 16px 24px !important;
+}
+
+.ant-table-tbody > tr > td {
+  padding: 16px 24px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  color: #334155;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Table Row Hover */
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #f1f5f9 !important;
+}
+
+/* --- PAGINATION --- */
+.ant-pagination {
+  margin: 24px 0 !important;
+  display: flex;
+  justify-content: center;
+}
+
+.ant-pagination-item {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: white;
+  transition: all 0.3s ease;
+}
+
+.ant-pagination-item a {
+  color: #64748b !important;
+}
+
+.ant-pagination-item:hover {
+  border-color: #1E4E2D !important;
+}
+
+.ant-pagination-item-active {
+  background-color: #1E4E2D !important;
+  border-color: #1E4E2D !important;
+  box-shadow: 0 2px 6px rgba(30, 78, 45, 0.3);
+}
+
+.ant-pagination-item-active a {
+  color: white !important;
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+  transition: all 0.3s ease;
+}
+.ant-pagination-prev:hover .ant-pagination-item-link,
+.ant-pagination-next:hover .ant-pagination-item-link {
+  border-color: #1E4E2D !important;
+  color: #1E4E2D !important;
+}
+
+/* --- BUTTONS --- */
+.ant-btn {
+  border-radius: 8px !important;
+  font-weight: 500;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.ant-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ant-btn:active {
+  transform: translateY(0);
+}
+
+.ant-btn-primary {
+  background-color: #1E4E2D !important;
+  border-color: #1E4E2D !important;
+  box-shadow: 0 4px 14px rgba(30, 78, 45, 0.3) !important;
+}
+
+.ant-btn-primary:hover, .ant-btn-primary:focus {
+  background-color: #14351F !important;
+  border-color: #14351F !important;
+  box-shadow: 0 6px 20px rgba(30, 78, 45, 0.4) !important;
+}
+
+/* --- FORMS & INPUTS --- */
+.ant-input, .ant-select-selector, .ant-picker {
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 8px 12px;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+
+.ant-input:hover, .ant-select:hover .ant-select-selector, .ant-picker:hover {
+  border-color: #94a3b8 !important;
+}
+
+.ant-input:focus, .ant-input-focused,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused {
+  border-color: #1E4E2D !important;
+  box-shadow: 0 0 0 3px rgba(30, 78, 45, 0.2) !important;
+}

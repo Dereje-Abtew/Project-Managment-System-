@@ -3,6 +3,7 @@
  *
  * Provides a single rich analytics endpoint that powers the GeneralReport dashboard.
  * Reads directly from the Project model — no Report document needed.
+ * Also aggregates ServiceProviderRequirement and RequirementTemplate stats.
  *
  * GET /api/project-report/analytics
  * Query params:
@@ -16,6 +17,8 @@
 
 const mongoose = require('mongoose');
 const Project = require('@/models/appModels/Project');
+const ServiceProviderRequirement = require('@/models/appModels/ServiceProviderRequirement');
+const RequirementTemplate = require('@/models/appModels/RequirementTemplate');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -254,6 +257,63 @@ exports.getAnalytics = async (req, res) => {
     const completionRate = totalTasks     > 0 ? Math.round((totalCompleted / totalTasks)     * 100) : 0;
     const delayRate      = totalTasks     > 0 ? Math.round((totalDelayed   / totalTasks)     * 100) : 0;
 
+    // ── Requirement & Template analytics ─────────────────────────────────────
+    // Run all counts in parallel for performance
+    const [
+      reqTotal,
+      reqSubmitted,
+      reqApproved,
+      reqRejected,
+      reqEnhancement,
+      reqImplemented,
+      templateTotal,
+      templateGlobal,
+      reqRecent,
+    ] = await Promise.all([
+      ServiceProviderRequirement.countDocuments({ removed: false }),
+      ServiceProviderRequirement.countDocuments({ removed: false, status: 'submitted' }),
+      ServiceProviderRequirement.countDocuments({ removed: false, status: 'approved' }),
+      ServiceProviderRequirement.countDocuments({ removed: false, status: 'rejected' }),
+      ServiceProviderRequirement.countDocuments({ removed: false, status: 'enhancement_pending' }),
+      ServiceProviderRequirement.countDocuments({ removed: false, status: 'implemented' }),
+      RequirementTemplate.countDocuments({ removed: false }),
+      RequirementTemplate.countDocuments({ removed: false, isGlobal: true }),
+      // Last 50 requirements — populate serviceProvider name for the detail table
+      ServiceProviderRequirement.find({ removed: false })
+        .sort({ created: -1 })
+        .limit(50)
+        .populate('serviceProvider', 'name company')
+        .lean(),
+    ]);
+
+    // Build requirement detail rows for the report table
+    const requirementDetails = reqRecent.map((r) => ({
+      _id:             String(r._id),
+      senderName:      r.senderName || '—',
+      senderEmail:     r.senderEmail || '',
+      serviceProvider: r.serviceProvider?.name || r.serviceProvider || '—',
+      status:          r.status,
+      submittedAt:     r.submittedAt,
+      approvedAt:      r.approvedAt || null,
+      rejectedAt:      r.rejectedAt || null,
+      isEnhancement:   r.isEnhancement || false,
+      attachmentCount: Array.isArray(r.attachments) ? r.attachments.length : 0,
+    }));
+
+    const requirementSummary = {
+      total:              reqTotal,
+      submitted:          reqSubmitted,
+      approved:           reqApproved,
+      rejected:           reqRejected,
+      enhancementPending: reqEnhancement,
+      implemented:        reqImplemented,
+      approvalRate:       reqTotal > 0 ? Math.round((reqApproved  / reqTotal) * 100) : 0,
+      rejectionRate:      reqTotal > 0 ? Math.round((reqRejected  / reqTotal) * 100) : 0,
+      templatesUploaded:  templateTotal,
+      globalTemplates:    templateGlobal,
+      specificTemplates:  templateTotal - templateGlobal,
+    };
+
     return res.status(200).json({
       success: true,
       summary: {
@@ -271,6 +331,8 @@ exports.getAnalytics = async (req, res) => {
         totalActualBudget,
         budgetVariance: totalActualBudget - totalBudget,
       },
+      requirementSummary,
+      requirementDetails,
       projectBreakdowns,
       monthlyTrend: trendArray,
       taskDetails,

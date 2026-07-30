@@ -61,6 +61,8 @@ async function setupApp() {
       { url: '/send-requirement', name: 'Send Requirement', isSubMenu: false, permissions: allPerms },
       { url: '/approve-requirement', name: 'Approve Requirement', isSubMenu: false, permissions: allPerms },
       { url: '/requirement-template', name: 'Requirement Template', isSubMenu: false, permissions: allPerms },
+      { url: '/uat-signoff', name: 'UAT Sign Off', isSubMenu: false, permissions: allPerms },
+      { url: '/sp-dashboard', name: 'SP UAT Portal', isSubMenu: false, permissions: allPerms },
       { url: '/role',      name: 'Role',       isSubMenu: true,  parentMenu: 'Settings',  permissions: allPerms },
     ];
 
@@ -108,6 +110,8 @@ async function setupApp() {
           { resource: resByName['Approve Requirement']._id,    permissions: allPerms },
           { resource: resByName['Requirement Template']._id,   permissions: allPerms },
           { resource: resByName['Service Provider']._id,       permissions: allPerms },
+          { resource: resByName['UAT Sign Off']._id,           permissions: allPerms },
+          { resource: resByName['SP UAT Portal']._id,          permissions: allPerms },
         ],
       },
       {
@@ -123,6 +127,8 @@ async function setupApp() {
           { resource: resByName['Send Requirement']._id,       permissions: allPerms },
           { resource: resByName['Requirement Template']._id,   permissions: allPerms },
           { resource: resByName['Service Provider']._id,       permissions: [permByName['read']._id] },
+          { resource: resByName['UAT Sign Off']._id,           permissions: allPerms },
+          { resource: resByName['SP UAT Portal']._id,          permissions: allPerms },
         ],
       },
       {

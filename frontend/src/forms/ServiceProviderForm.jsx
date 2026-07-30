@@ -41,6 +41,38 @@ export default function ServiceProviderForm({ isUpdateForm = false }) {
         <Input />
       </Form.Item>
       <Form.Item
+        name="username"
+        label="Portal Username"
+        tooltip="Username for service provider to login to the UAT portal"
+        rules={[
+          {
+            required: !isUpdateForm,
+            message: 'Please input a username for portal access!',
+          },
+        ]}
+      >
+        <Input placeholder="username (for UAT portal login)" />
+      </Form.Item>
+      {!isUpdateForm && (
+        <Form.Item
+          name="password"
+          label="Portal Password"
+          tooltip="Password for service provider to login to the UAT portal"
+          rules={[
+            {
+              required: true,
+              message: 'Please input a password!',
+            },
+            {
+              min: 6,
+              message: 'Password must be at least 6 characters!',
+            },
+          ]}
+        >
+          <Input.Password placeholder="password (minimum 6 characters)" />
+        </Form.Item>
+      )}
+      <Form.Item
         name="address"
         label="Address"
       >
