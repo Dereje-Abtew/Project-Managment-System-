@@ -42,7 +42,7 @@ export const getIconComponent = (iconName) => {
       return <FileProtectOutlined />;
     case 'General Report':
       return <BarChartOutlined />;
-    case 'Service Provider':
+    case 'Stakeholder':
       return <BankOutlined />;
     case 'Send Requirement':
       return <SendOutlined />;

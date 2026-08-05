@@ -8,32 +8,16 @@ export const routesConfig = [
     component: 'Profile',
   },
   {
-    path: '/serviceprovider',
-    component: 'ServiceProvider/index',
-  },
-  {
-    path: '/serviceprovider/create',
-    component: 'ServiceProvider/ServiceProviderCreate',
-  },
-  {
-    path: '/serviceprovider/read/:id',
-    component: 'ServiceProvider/ServiceProviderRead',
-  },
-  {
-    path: '/serviceprovider/update/:id',
-    component: 'ServiceProvider/ServiceProviderUpdate',
-  },
-  {
     path: '/send-requirement',
-    component: 'ServiceProvider/SendRequirement',
+    component: 'Stakeholder/SendRequirement',
   },
   {
     path: '/approve-requirement',
-    component: 'ServiceProvider/ApproveRequirement',
+    component: 'Stakeholder/ApproveRequirement',
   },
   {
     path: '/requirement-template',
-    component: 'ServiceProvider/RequirementTemplate',
+    component: 'Stakeholder/RequirementTemplate',
   },
   {
     path: '/chief',
@@ -148,7 +132,7 @@ export const routesConfig = [
   },
   {
     path: '/sp-dashboard',
-    component: 'ServiceProvider/SPUATDashboard',
+    component: 'Stakeholder/SPUATDashboard',
   },
   {
     path: '/uat-signoff',

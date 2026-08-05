@@ -2,9 +2,24 @@ const User = require('../../../models/coreModels/User');
 
 const update = async (Model, req, res) => {
   try {
-    if (Model.collection.name === 'users' && req.body.password) {
+    const collectionName = Model.collection.name;
+
+    // Hash password for User and Stakeholder updates.
+    // If the password field is blank (empty string), remove it from the update
+    // so the existing password is preserved.
+    if (collectionName === 'users' && req.body.password) {
       const newUser = new User();
       req.body.password = newUser.generateHash(req.body.password);
+    }
+
+    if (collectionName === 'stakeholders') {
+      if (req.body.password && req.body.password.trim() !== '') {
+        const newUser = new User();
+        req.body.password = newUser.generateHash(req.body.password.trim());
+      } else {
+        // Remove password from update payload so existing hash is kept
+        delete req.body.password;
+      }
     }
 
     const result = await Model.findOneAndUpdate({ _id: req.params.id, removed: false }, req.body, {

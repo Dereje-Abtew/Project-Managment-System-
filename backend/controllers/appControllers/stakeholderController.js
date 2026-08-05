@@ -1,2 +1,2 @@
 const createCRUDController = require('@/controllers/middlewaresControllers/createCRUDController');
-module.exports = createCRUDController('ServiceProvider');
+module.exports = createCRUDController('Stakeholder');

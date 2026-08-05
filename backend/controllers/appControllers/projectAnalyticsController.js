@@ -3,7 +3,7 @@
  *
  * Provides a single rich analytics endpoint that powers the GeneralReport dashboard.
  * Reads directly from the Project model — no Report document needed.
- * Also aggregates ServiceProviderRequirement and RequirementTemplate stats.
+ * Also aggregates StakeholderRequirement and RequirementTemplate stats.
  *
  * GET /api/project-report/analytics
  * Query params:
@@ -17,7 +17,7 @@
 
 const mongoose = require('mongoose');
 const Project = require('@/models/appModels/Project');
-const ServiceProviderRequirement = require('@/models/appModels/ServiceProviderRequirement');
+const StakeholderRequirement = require('@/models/appModels/StakeholderRequirement');
 const RequirementTemplate = require('@/models/appModels/RequirementTemplate');
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -270,19 +270,19 @@ exports.getAnalytics = async (req, res) => {
       templateGlobal,
       reqRecent,
     ] = await Promise.all([
-      ServiceProviderRequirement.countDocuments({ removed: false }),
-      ServiceProviderRequirement.countDocuments({ removed: false, status: 'submitted' }),
-      ServiceProviderRequirement.countDocuments({ removed: false, status: 'approved' }),
-      ServiceProviderRequirement.countDocuments({ removed: false, status: 'rejected' }),
-      ServiceProviderRequirement.countDocuments({ removed: false, status: 'enhancement_pending' }),
-      ServiceProviderRequirement.countDocuments({ removed: false, status: 'implemented' }),
+      StakeholderRequirement.countDocuments({ removed: false }),
+      StakeholderRequirement.countDocuments({ removed: false, status: 'submitted' }),
+      StakeholderRequirement.countDocuments({ removed: false, status: 'approved' }),
+      StakeholderRequirement.countDocuments({ removed: false, status: 'rejected' }),
+      StakeholderRequirement.countDocuments({ removed: false, status: 'enhancement_pending' }),
+      StakeholderRequirement.countDocuments({ removed: false, status: 'implemented' }),
       RequirementTemplate.countDocuments({ removed: false }),
       RequirementTemplate.countDocuments({ removed: false, isGlobal: true }),
-      // Last 50 requirements — populate serviceProvider name for the detail table
-      ServiceProviderRequirement.find({ removed: false })
+      // Last 50 requirements — populate stakeholder name for the detail table
+      StakeholderRequirement.find({ removed: false })
         .sort({ created: -1 })
         .limit(50)
-        .populate('serviceProvider', 'name company')
+        .populate('stakeholder', 'name company')
         .lean(),
     ]);
 
@@ -291,7 +291,7 @@ exports.getAnalytics = async (req, res) => {
       _id:             String(r._id),
       senderName:      r.senderName || '—',
       senderEmail:     r.senderEmail || '',
-      serviceProvider: r.serviceProvider?.name || r.serviceProvider || '—',
+      stakeholder: r.stakeholder?.name || r.stakeholder || '—',
       status:          r.status,
       submittedAt:     r.submittedAt,
       approvedAt:      r.approvedAt || null,

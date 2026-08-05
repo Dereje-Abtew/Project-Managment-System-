@@ -82,7 +82,7 @@ export default function AppRouter() {
 
   // If required auth data is missing, clear storage and redirect via React Router
   // (use <Redirect> instead of window.location.href to avoid full-page reload loops)
-  if (!storedAuthorizedRoutes || !AUTH || !PERMISSIONS || !RESOURCES) {
+  if (!storedAuthorizedRoutes || !AUTH) {
     clearAuthAndRedirect();
     return <Redirect to="/login" />;
   }
@@ -99,13 +99,9 @@ export default function AppRouter() {
       />
     ));
 
-  // Always allow /profile, /logout, /uat-signoff and /sp-dashboard for any logged-in user
+  // Always allow profile and logout for any logged-in user
   const alwaysAllowedRouteElements = routesConfig
-    .filter((routeItem) =>
-      ['/profile', '/logout'].includes(routeItem.path) ||
-      routeItem.path.startsWith('/uat-signoff') ||
-      routeItem.path.startsWith('/sp-dashboard')
-    )
+    .filter((routeItem) => ['/profile', '/logout'].includes(routeItem.path))
     .filter((routeItem) => !authorizedRouteElements.some((el) => el.key === routeItem.path))
     .map((routeItem) => (
       <PrivateRoute

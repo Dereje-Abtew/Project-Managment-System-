@@ -1,0 +1,459 @@
+/* ==========================================================================
+   PREMIUM TABLE ENHANCEMENTS
+   Clean table styling with white header background
+   ========================================================================== */
+
+/* Table Container Elevation */
+.ant-table-wrapper {
+  position: relative;
+  transition: box-shadow 0.3s ease;
+  background: white !important;
+}
+
+.ant-table-wrapper:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Clean Header Style - White Background with VISIBLE TEXT */
+.ant-table-thead > tr > th {
+  position: relative;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  background: #ffffff !important;
+  background-image: none !important;
+  background-color: #ffffff !important;
+  color: #064e3b !important;
+}
+
+/* Force all text elements to be visible */
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > th span,
+.ant-table-thead > tr > th div,
+.ant-table-thead > tr > th .ant-table-column-title,
+.ant-table-thead > tr > th .ant-table-column-sorters {
+  color: #064e3b !important;
+}
+
+/* Remove any gradient overlays or pseudo elements */
+.ant-table-thead > tr > th::before,
+.ant-table-thead > tr > th::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+/* Force remove any Ant Design default backgrounds */
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > th:hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #064e3b !important;
+}
+
+/* Remove text shadow if any */
+.ant-table-thead > tr > th {
+  text-shadow: none !important;
+}
+
+/* Ensure column titles are visible */
+.ant-table-column-title {
+  color: #064e3b !important;
+  visibility: visible !important;
+}
+
+/* Enhanced Cell Styling */
+.ant-table-tbody > tr > td {
+  position: relative;
+  vertical-align: middle;
+}
+
+/* Cell Focus/Selection Effect */
+.ant-table-tbody > tr > td:focus-within {
+  background-color: #f0fdf4 !important;
+  box-shadow: inset 0 0 0 2px #064e3b;
+}
+
+/* Row Number Column Special Styling */
+.ant-table-tbody > tr > td:first-child {
+  background: linear-gradient(90deg, #fafafa 0%, transparent 100%);
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td:first-child {
+  background: linear-gradient(90deg, #f0fdf4 0%, transparent 100%);
+}
+
+/* Action Column Special Styling */
+.ant-table-tbody > tr > td:last-child {
+  background: linear-gradient(270deg, #fafafa 0%, transparent 100%);
+}
+
+.ant-table-tbody > tr:hover > td:last-child {
+  background: linear-gradient(270deg, #f0fdf4 0%, transparent 100%);
+}
+
+/* Enhanced Row Hover with Smooth Animation */
+.ant-table-tbody > tr.ant-table-row {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.ant-table-tbody > tr.ant-table-row:hover {
+  box-shadow: 0 2px 8px rgba(6, 78, 59, 0.08);
+  position: relative;
+  z-index: 1;
+}
+
+/* Striped Rows (Optional Enhancement) */
+.ant-table-tbody > tr:nth-child(odd) > td {
+  background-color: #ffffff;
+}
+
+.ant-table-tbody > tr:nth-child(even) > td {
+  background-color: #fafafa;
+}
+
+/* Row Selection Highlight */
+.ant-table-row-selected > td {
+  background: linear-gradient(90deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border-left: 4px solid #064e3b !important;
+  font-weight: 500;
+}
+
+/* Checkbox Styling */
+.ant-checkbox-wrapper {
+  font-size: 14px;
+}
+
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #064e3b !important;
+  border-color: #064e3b !important;
+  box-shadow: 0 2px 4px rgba(6, 78, 59, 0.2);
+}
+
+.ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background-color: #064e3b !important;
+}
+
+.ant-checkbox-wrapper:hover .ant-checkbox-inner,
+.ant-checkbox:hover .ant-checkbox-inner,
+.ant-checkbox-input:focus + .ant-checkbox-inner {
+  border-color: #064e3b !important;
+}
+
+/* Enhanced Sorting Indicators */
+.ant-table-column-sorter {
+  margin-left: 8px;
+}
+
+.ant-table-column-sorter-up,
+.ant-table-column-sorter-down {
+  transition: all 0.3s ease;
+}
+
+.ant-table-column-sorter-up.active,
+.ant-table-column-sorter-down.active {
+  color: #F1B31C !important;
+  transform: scale(1.2);
+}
+
+/* Filter Icon Enhancement */
+.ant-table-filter-trigger {
+  border-radius: 4px;
+  padding: 4px;
+  transition: all 0.3s ease;
+}
+
+.ant-table-filter-trigger:hover {
+  background-color: rgba(241, 179, 28, 0.15) !important;
+  color: #F1B31C !important;
+}
+
+.ant-table-filter-trigger.active {
+  background-color: rgba(241, 179, 28, 0.25) !important;
+  color: #F1B31C !important;
+}
+
+/* Pagination Enhancement */
+.ant-table-pagination.ant-pagination {
+  padding: 16px 0;
+}
+
+/* Pagination Info Text */
+.ant-pagination-total-text {
+  flex: 1;
+  text-align: left;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Size Changer Dropdown */
+.ant-select-selector {
+  border-radius: 8px !important;
+}
+
+/* Empty State Enhancement */
+.ant-empty {
+  margin: 48px 0;
+}
+
+.ant-empty-image {
+  height: 120px;
+  opacity: 0.6;
+}
+
+.ant-empty-description {
+  color: #9ca3af;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* Loading State */
+.ant-table-placeholder .ant-table-cell {
+  border-bottom: none !important;
+}
+
+.ant-spin-dot {
+  font-size: 32px;
+}
+
+.ant-spin-dot-item {
+  background-color: #064e3b !important;
+}
+
+/* Expandable Row Icon */
+.ant-table-row-expand-icon {
+  border: 1px solid #064e3b !important;
+  color: #064e3b !important;
+  background-color: white;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.ant-table-row-expand-icon:hover {
+  background-color: #064e3b !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+.ant-table-row-expand-icon:focus {
+  outline: 2px solid rgba(6, 78, 59, 0.3);
+}
+
+/* Expanded Row Content */
+.ant-table-expanded-row > .ant-table-cell {
+  background-color: #f9fafb !important;
+  border-top: 2px solid #064e3b !important;
+  border-bottom: 2px solid #064e3b !important;
+  padding: 24px !important;
+}
+
+/* Fixed Columns Shadow */
+.ant-table-cell-fix-left,
+.ant-table-cell-fix-right {
+  z-index: 2;
+  background-color: white;
+}
+
+.ant-table-cell-fix-left::after {
+  box-shadow: inset 10px 0 8px -8px rgba(0, 0, 0, 0.08);
+}
+
+.ant-table-cell-fix-right::after {
+  box-shadow: inset -10px 0 8px -8px rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive Scroll Hint */
+.ant-table-body::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+.ant-table-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin: 8px;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+}
+
+.ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+
+/* Footer Enhancement */
+.ant-table-footer {
+  background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+  border-top: 2px solid #f3f4f6;
+  padding: 16px 24px;
+  border-radius: 0 0 16px 16px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+/* Column Resize Handle */
+.react-resizable-handle {
+  background-color: rgba(6, 78, 59, 0.2);
+  border-radius: 2px;
+}
+
+.react-resizable-handle:hover {
+  background-color: #064e3b;
+}
+
+/* Print Styles */
+@media print {
+  .ant-table-wrapper {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  .ant-table-thead > tr > th {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .ant-pagination {
+    display: none !important;
+  }
+}
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 768px) {
+  .ant-table-thead > tr > th {
+    padding: 12px 16px !important;
+    font-size: 11px !important;
+  }
+  
+  .ant-table-tbody > tr > td {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+  }
+  
+  .ant-pagination-item {
+    min-width: 32px !important;
+    height: 32px !important;
+    margin: 0 2px !important;
+  }
+  
+  .ant-table-wrapper {
+    border-radius: 12px !important;
+  }
+}
+
+/* Table Title Bar Enhancement */
+.ant-page-header {
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+/* Search Input Enhancement in Header */
+.ant-input-search {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ant-input-search-button {
+  height: 38px !important;
+}
+
+/* Action Buttons in Header */
+.ant-page-header-heading-extra {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ant-page-header-heading-extra .ant-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tag Enhancements in Table Cells */
+.ant-table-tbody .ant-tag {
+  margin: 2px;
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Badge Enhancement */
+.ant-badge {
+  font-weight: 600;
+}
+
+.ant-badge-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+/* Avatar Enhancement in Tables */
+.ant-avatar {
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Typography in Tables */
+.ant-table-tbody strong,
+.ant-table-tbody b {
+  color: #064e3b;
+  font-weight: 600;
+}
+
+.ant-table-tbody a {
+  color: #064e3b;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.ant-table-tbody a:hover {
+  color: #065f46;
+  text-decoration: underline;
+}
+
+/* Icon Enhancement in Table Cells */
+.ant-table-tbody .anticon {
+  transition: all 0.3s ease;
+}
+
+.ant-table-tbody .anticon:hover {
+  transform: scale(1.2);
+  color: #064e3b;
+}
+
+/* Tooltip Enhancement */
+.ant-tooltip-inner {
+  background-color: #1f2937;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.ant-tooltip-arrow-content {
+  background-color: #1f2937;
+}
+
+/* Summary Row Enhancement */
+.ant-table-summary {
+  background: linear-gradient(to bottom, #fafafa 0%, #f3f4f6 100%);
+  border-top: 2px solid #064e3b !important;
+}
+
+.ant-table-summary-row > .ant-table-cell {
+  font-weight: 600;
+  color: #064e3b;
+  padding: 16px 20px !important;
+}

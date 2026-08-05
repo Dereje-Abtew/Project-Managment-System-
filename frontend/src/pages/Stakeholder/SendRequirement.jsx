@@ -191,9 +191,9 @@ export default function SendRequirement() {
   const [enhTarget,      setEnhTarget]      = useState(null);
   const [enhAttachments, setEnhAttachments] = useState([]);
   const [enhSubmitting,  setEnhSubmitting]  = useState(false);
-  // Templates indexed by serviceProvider._id
+  // Templates indexed by stakeholder._id
   const [templateMap,    setTemplateMap]    = useState({});
-  // All registered service providers
+  // All registered stakeholders
   const [providers,      setProviders]      = useState([]);
   // The currently selected provider id in the form
   const [selectedSpId,   setSelectedSpId]   = useState(null);
@@ -202,7 +202,7 @@ export default function SendRequirement() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await request.get({ entity: 'serviceprovider-requirement/mine' });
+      const res = await request.get({ entity: 'stakeholder-requirement/mine' });
       setRequirements(Array.isArray(res?.result) ? res.result : []);
     } catch { message.error('Unable to load your submissions.');
     } finally { setLoading(false); }
@@ -222,7 +222,7 @@ export default function SendRequirement() {
           if (t.isGlobal) {
             if (!globalTemplate) globalTemplate = t;  // pick latest global
           } else {
-            const spId = t.serviceProvider?._id || t.serviceProvider;
+            const spId = t.stakeholder?._id || t.stakeholder;
             if (spId && !map[spId]) map[spId] = t;    // specific always wins, pick latest
           }
         }
@@ -248,7 +248,7 @@ export default function SendRequirement() {
     try {
       // Try to get global templates directly via a known provider
       // Use listByProvider which has no permission gate
-      const provRes = await request.list({ entity: 'serviceprovider' });
+      const provRes = await request.list({ entity: 'stakeholder' });
       const provList = Array.isArray(provRes?.result) ? provRes.result : [];
 
       if (provList.length === 0) return;
@@ -267,7 +267,7 @@ export default function SendRequirement() {
           if (t.isGlobal) {
             if (!globalTemplate) globalTemplate = t;
           } else {
-            const spId = t.serviceProvider?._id || t.serviceProvider;
+            const spId = t.stakeholder?._id || t.stakeholder;
             if (spId && !map[spId]) map[spId] = t;
           }
         }
@@ -279,7 +279,7 @@ export default function SendRequirement() {
 
   const loadProviders = async () => {
     try {
-      const res = await request.list({ entity: 'serviceprovider' });
+      const res = await request.list({ entity: 'stakeholder' });
       setProviders(Array.isArray(res?.result) ? res.result : []);
     } catch { /* non-fatal */ }
   };
@@ -303,11 +303,11 @@ export default function SendRequirement() {
   // ── submit ────────────────────────────────────────────────────────────────
   const handleSubmit = async (values) => {
     // Hard gate: template MUST exist for the selected provider (specific OR global)
-    const hasSpecific = Boolean(templateMap[values.serviceProvider]);
+    const hasSpecific = Boolean(templateMap[values.stakeholder]);
     const hasGlobalFallback = Boolean(templateMap['__global__']);
     if (!hasSpecific && !hasGlobalFallback) {
       message.error(
-        'No requirement template has been uploaded for this service provider. ' +
+        'No requirement template has been uploaded for this stakeholder. ' +
         'An administrator must upload a template before you can submit a requirement.',
         6
       );
@@ -320,7 +320,7 @@ export default function SendRequirement() {
     setSubmitting(true);
     try {
       const res = await request.create({
-        entity: 'serviceprovider-requirement',
+        entity: 'stakeholder-requirement',
         jsonData: { ...values, attachments },
       });
       if (res?.success) {
@@ -340,7 +340,7 @@ export default function SendRequirement() {
     setDetailVisible(true);
     setSelected(null);
     try {
-      const res = await request.read({ entity: 'serviceprovider-requirement', id: record._id });
+      const res = await request.read({ entity: 'stakeholder-requirement', id: record._id });
       if (res?.success) setSelected(res.result);
       else message.error('Unable to load details.');
     } catch { message.error('Unable to load details.');
@@ -350,7 +350,7 @@ export default function SendRequirement() {
   // ── enhancement ───────────────────────────────────────────────────────────
   const openEnhancement = async (record) => {
     try {
-      const res = await request.read({ entity: 'serviceprovider-requirement', id: record._id });
+      const res = await request.read({ entity: 'stakeholder-requirement', id: record._id });
       setEnhTarget(res?.success ? res.result : record);
     } catch { setEnhTarget(record); }
     setEnhAttachments([]);
@@ -364,7 +364,7 @@ export default function SendRequirement() {
     setEnhSubmitting(true);
     try {
       const res = await request.post({
-        entity: `serviceprovider-requirement/enhancement/${enhTarget._id}`,
+        entity: `stakeholder-requirement/enhancement/${enhTarget._id}`,
         jsonData: {
           description: values.description,
           senderName:  defaultName,
@@ -390,9 +390,9 @@ export default function SendRequirement() {
     },
     { title:<b>Sender</b>, dataIndex:'senderName', key:'senderName' },
     {
-      title:<b>Service Provider</b>, key:'sp', width:160,
-      render:(_, r) => r.serviceProvider?.name
-        ? <Tag color="geekblue">{r.serviceProvider.name}</Tag>
+      title:<b>Stakeholder</b>, key:'sp', width:160,
+      render:(_, r) => r.stakeholder?.name
+        ? <Tag color="geekblue">{r.stakeholder.name}</Tag>
         : <Text type="secondary">—</Text>,
     },
     {
@@ -409,13 +409,13 @@ export default function SendRequirement() {
     },
     {
       title:(
-        <Tooltip title="Reference template for the service provider linked to this requirement">
+        <Tooltip title="Reference template for the stakeholder linked to this requirement">
           <b>Template</b>
         </Tooltip>
       ),
       key:'template', width:200,
       render:(_, r) => {
-        const spId = r.serviceProvider?._id || r.serviceProvider;
+        const spId = r.stakeholder?._id || r.stakeholder;
         // Specific template wins; fall back to global if no specific one
         const tmpl = spId
           ? (templateMap[spId] || templateMap['__global__'] || null)
@@ -471,7 +471,7 @@ export default function SendRequirement() {
         <div>
           <Title level={4} style={{ margin:0 }}>Send Requirement</Title>
           <Text type="secondary">
-            Select a service provider, review its reference template, then attach and submit your document.
+            Select a stakeholder, review its reference template, then attach and submit your document.
           </Text>
         </div>
       </div>
@@ -488,7 +488,7 @@ export default function SendRequirement() {
                                      1     // step 2 — template available, waiting for file
           }
         >
-          <Step title="Select Provider" description="Choose the service provider" />
+          <Step title="Select Provider" description="Choose the stakeholder" />
           <Step
             title="Download Template"
             description={
@@ -514,7 +514,7 @@ export default function SendRequirement() {
               <Col xs={24} sm={8}>
                 <Form.Item label="Sender Name" name="senderName" initialValue={defaultName}
                   rules={[{ required:true }]}>
-                  <Input readOnly style={{ background:'#f5f5f5', cursor:'default' }} />
+                  <Input readOnly style={{ cursor:'default' }} />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={8}>
@@ -531,17 +531,17 @@ export default function SendRequirement() {
               </Col>
             </Row>
 
-            {/* Row 2 — date (auto) + service provider select */}
+            {/* Row 2 — date (auto) + stakeholder select */}
             <Row gutter={16}>
               <Col xs={24} sm={8}>
                 <Form.Item label="Date">
                   <Input readOnly value={new Date().toLocaleDateString()}
-                    style={{ background:'#f5f5f5', cursor:'default' }} />
+                    style={{ cursor:'default' }} />
                 </Form.Item>
               </Col>
               <Col xs={24} sm={16}>
-                <Form.Item label="Service Provider" name="serviceProvider"
-                  rules={[{ required:true, message:'Please select a service provider.' }]}
+                <Form.Item label="Stakeholder" name="stakeholder"
+                  rules={[{ required:true, message:'Please select a stakeholder.' }]}
                   extra={
                     selectedSpId && !templateExists
                       ? <Text type="danger" style={{ fontSize:12 }}>
@@ -558,7 +558,7 @@ export default function SendRequirement() {
                   }
                 >
                   <Select
-                    placeholder="Select service provider…"
+                    placeholder="Select stakeholder…"
                     showSearch
                     optionFilterProp="label"
                     onChange={async (spId) => {
@@ -578,7 +578,7 @@ export default function SendRequirement() {
                               if (t.isGlobal) {
                                 if (!latestGlobal) latestGlobal = t; // latest global
                               } else {
-                                const tid = t.serviceProvider?._id || t.serviceProvider;
+                                const tid = t.stakeholder?._id || t.stakeholder;
                                 if (tid && !map[tid]) map[tid] = t;
                               }
                             }
@@ -690,7 +690,7 @@ export default function SendRequirement() {
                   message="Template Required — Submission Blocked"
                   description={
                     <span>
-                      No requirement template has been uploaded for <b>{providers.find(p=>p._id===selectedSpId)?.name || 'this service provider'}</b>.
+                      No requirement template has been uploaded for <b>{providers.find(p=>p._id===selectedSpId)?.name || 'this stakeholder'}</b>.
                       <br/>
                       An administrator must upload a template via <b>Requirement Templates</b> before you can submit a requirement for this provider.
                     </span>
@@ -721,7 +721,7 @@ export default function SendRequirement() {
               <Tooltip
                 title={
                   !selectedSpId
-                    ? 'Select a service provider first'
+                    ? 'Select a stakeholder first'
                     : !templateExists
                     ? 'A template must be uploaded for this provider before submission is allowed'
                     : ''
@@ -797,10 +797,10 @@ export default function SendRequirement() {
             <Descriptions.Item label="Sender">{selected.senderName}</Descriptions.Item>
             <Descriptions.Item label="Email">{selected.senderEmail || '—'}</Descriptions.Item>
             <Descriptions.Item label="Phone">{selected.senderPhone || '—'}</Descriptions.Item>
-            {selected.serviceProvider && (
-              <Descriptions.Item label="Service Provider">
+            {selected.stakeholder && (
+              <Descriptions.Item label="Stakeholder">
                 <Tag color="geekblue" style={{ fontWeight:500 }}>
-                  {selected.serviceProvider?.name || '—'}
+                  {selected.stakeholder?.name || '—'}
                 </Tag>
               </Descriptions.Item>
             )}

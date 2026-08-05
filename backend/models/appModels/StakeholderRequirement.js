@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
-const serviceProviderRequirementSchema = new mongoose.Schema({
+const stakeholderRequirementSchema = new mongoose.Schema({
   removed: {
     type: Boolean,
     default: false,
   },
-  serviceProvider: {
+  stakeholder: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ServiceProvider',
+    ref: 'Stakeholder',
     required: false,
     autopopulate: true,
   },
@@ -24,8 +24,8 @@ const serviceProviderRequirementSchema = new mongoose.Schema({
   },
   submittedByType: {
     type: String,
-    enum: ['service_provider', 'internal_user'],
-    default: 'service_provider',
+    enum: ['stakeholder', 'internal_user'],
+    default: 'stakeholder',
   },
   senderName: {
     type: String,
@@ -99,7 +99,7 @@ const serviceProviderRequirementSchema = new mongoose.Schema({
   },
   parentRequirement: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ServiceProviderRequirement',
+    ref: 'StakeholderRequirement',
     autopopulate: true,
   },
   enhancementSummary: {
@@ -148,5 +148,5 @@ const serviceProviderRequirementSchema = new mongoose.Schema({
   },
 });
 
-serviceProviderRequirementSchema.plugin(require('mongoose-autopopulate'));
-module.exports = mongoose.model('ServiceProviderRequirement', serviceProviderRequirementSchema);
+stakeholderRequirementSchema.plugin(require('mongoose-autopopulate'));
+module.exports = mongoose.model('StakeholderRequirement', stakeholderRequirementSchema);

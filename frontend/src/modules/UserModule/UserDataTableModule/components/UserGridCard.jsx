@@ -64,7 +64,7 @@ export default function UserGridCard({ user, onEdit }) {
 
           {permissions.includes('update') && (
             <button style={styles.editBtn} onClick={handleEdit} title="Edit">
-              <EditOutlined style={{ fontSize: 14, color: '#fff' }} />
+              <EditOutlined style={{ fontSize: 14, color: '#595959' }} />
             </button>
           )}
         </div>
@@ -187,14 +187,14 @@ const styles = {
     width: 26,
     height: 26,
     borderRadius: '50%',
-    background: BRAND_GREEN,
-    border: 'none',
+    border: '1px solid #d9d9d9',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
     padding: 0,
+    background: '#fff',
   },
   // ✅ Green checkmark on top-left of avatar for active users (from CodeIgniter)
   activeCheckmark: {

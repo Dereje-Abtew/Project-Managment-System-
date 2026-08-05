@@ -143,19 +143,20 @@ export default function ProjectForm({ current = null, form }) {
             </Col>
             <Col className="gutter-row" span={12}>
               <Form.Item
-                label="Service Provider"
+                label="Owner Name (Stakeholder)"
                 name="ownerName"
                 rules={[
                   {
                     required: true,
-                    message: 'Please select a Service Provider!',
+                    message: 'Please select Owner (Stakeholder)!',
                   },
                 ]}
+                extra="Select a user with 'Stakeholder' position"
               >
                 <AutoCompleteAsync
-                  entity={'serviceprovider'}
-                  displayLabels={['name']}
-                  searchFields={'name'}
+                  entity={'user'}
+                  displayLabels={['firstName', 'lastName', 'email']}
+                  searchFields={'firstName,lastName,email'}
                 />
               </Form.Item>
             </Col>

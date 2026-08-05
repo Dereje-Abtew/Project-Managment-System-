@@ -29,11 +29,21 @@ const errorHandler = (error) => {
       message: `Request failed`,
       description: errorText,
     });
+    const requestUrl = error.config?.url || '';
     if (status === 401) {
-      window.location.href = '/logout';
+      if (!requestUrl.includes('sp-portal')) {
+        window.location.href = '/logout';
+      } else {
+        notification.error({
+          message: 'Unauthorized',
+          description: 'SP portal access is not authorized from this account.',
+        });
+      }
     }
     if (response.data && response.data.jwtExpired) {
-      window.location.href = '/logout';
+      if (!requestUrl.includes('sp-portal')) {
+        window.location.href = '/logout';
+      }
     }
     return response.data;
   } else {

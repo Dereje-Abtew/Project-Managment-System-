@@ -5,8 +5,8 @@ mongoose.Promise = global.Promise;
  * RequirementTemplate
  *
  * Stores a template document uploaded by an internal user.
- * Each template is scoped to a specific ServiceProvider — when a requirement
- * sender opens SendRequirement and a template exists for their service provider,
+ * Each template is scoped to a specific Stakeholder — when a requirement
+ * sender opens SendRequirement and a template exists for their stakeholder,
  * that template is surfaced in the table so they can download and use it as
  * a reference before preparing their submission.
  */
@@ -26,19 +26,19 @@ const requirementTemplateSchema = new mongoose.Schema({
     },
   },
 
-  // The service provider this template is intended for.
-  // Null/absent when isGlobal = true (applies to all providers).
-  serviceProvider: {
+  // The stakeholder this template is intended for.
+  // Null/absent when isGlobal = true (applies to all stakeholders).
+  stakeholder: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ServiceProvider',
+    ref: 'Stakeholder',
     required: false,
     autopopulate: {
       select: 'name email company',
     },
   },
 
-  // When true this template applies to ALL service providers.
-  // A provider-specific template always takes priority over a global one.
+  // When true this template applies to ALL stakeholders.
+  // A stakeholder-specific template always takes priority over a global one.
   isGlobal: {
     type: Boolean,
     default: false,

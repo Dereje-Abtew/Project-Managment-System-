@@ -18,8 +18,8 @@ const departmentController = require('@/controllers/appControllers/departmentCon
 const reportController = require('@/controllers/appControllers/reportController');
 const chiefController = require('@/controllers/appControllers/chiefController');
 const divisionController = require('@/controllers/appControllers/divisionController');
-const serviceProviderController = require('@/controllers/appControllers/serviceProviderController');
-const serviceProviderRequirementController = require('@/controllers/appControllers/serviceProviderRequirementController');
+const stakeholderController = require('@/controllers/appControllers/stakeholderController');
+const stakeholderRequirementController = require('@/controllers/appControllers/stakeholderRequirementController');
 const projectAnalyticsController = require('@/controllers/appControllers/projectAnalyticsController');
 
 // ── Project Analytics (General Report Dashboard) ──────────────────────────
@@ -134,24 +134,16 @@ router.route('/project/:id/issue/:issueId').get(catchErrors(projectIssueControll
 router.route('/project/:id/issue/:issueId').put(catchErrors(projectIssueController.update));
 router.route('/project/:id/issue/:issueId').delete(catchErrors(projectIssueController.delete));
 
-router.route('/serviceprovider/create').post(catchErrors(serviceProviderController.create));
-router.route('/serviceprovider/read/:id').get(catchErrors(serviceProviderController.read));
-router.route('/serviceprovider/update/:id').patch(catchErrors(serviceProviderController.update));
-router.route('/serviceprovider/delete/:id').delete(catchErrors(serviceProviderController.delete));
-router.route('/serviceprovider/search').get(catchErrors(serviceProviderController.search));
-router.route('/serviceprovider/list').get(catchErrors(serviceProviderController.list));
-router.route('/serviceprovider/filter').get(catchErrors(serviceProviderController.filter));
-
-router.route('/serviceprovider-requirement/login').post(catchErrors(serviceProviderRequirementController.login));
-router.route('/serviceprovider-requirement/create').post(catchErrors(serviceProviderRequirementController.create));
-router.route('/serviceprovider-requirement/list').get(catchErrors(serviceProviderRequirementController.list));
-router.route('/serviceprovider-requirement/mine').get(catchErrors(serviceProviderRequirementController.listMine));
-router.route('/serviceprovider-requirement/read/:id').get(catchErrors(serviceProviderRequirementController.read));
-router.route('/serviceprovider-requirement/approve/:id').patch(catchErrors(serviceProviderRequirementController.approve));
-router.route('/serviceprovider-requirement/reject/:id').patch(catchErrors(serviceProviderRequirementController.reject));
-router.route('/serviceprovider-requirement/reverse/:id').patch(catchErrors(serviceProviderRequirementController.reverseApproval));
-router.route('/serviceprovider-requirement/enhancement/:id').post(catchErrors(serviceProviderRequirementController.enhancement));
-router.route('/serviceprovider-requirement/delete/:id').delete(catchErrors(serviceProviderRequirementController.delete));
+router.route('/stakeholder-requirement/login').post(catchErrors(stakeholderRequirementController.login));
+router.route('/stakeholder-requirement/create').post(catchErrors(stakeholderRequirementController.create));
+router.route('/stakeholder-requirement/list').get(catchErrors(stakeholderRequirementController.list));
+router.route('/stakeholder-requirement/mine').get(catchErrors(stakeholderRequirementController.listMine));
+router.route('/stakeholder-requirement/read/:id').get(catchErrors(stakeholderRequirementController.read));
+router.route('/stakeholder-requirement/approve/:id').patch(catchErrors(stakeholderRequirementController.approve));
+router.route('/stakeholder-requirement/reject/:id').patch(catchErrors(stakeholderRequirementController.reject));
+router.route('/stakeholder-requirement/reverse/:id').patch(catchErrors(stakeholderRequirementController.reverseApproval));
+router.route('/stakeholder-requirement/enhancement/:id').post(catchErrors(stakeholderRequirementController.enhancement));
+router.route('/stakeholder-requirement/delete/:id').delete(catchErrors(stakeholderRequirementController.delete));
 
 // ── Comment routes (from CodeIgniter) ──────────────────────────────────────
 // POST   /project/:id/comment              → add a comment to a project
@@ -185,6 +177,7 @@ router.route('/uat-signoff/read/:id').get(catchErrors(uatSignOffController.read)
 router.route('/uat-signoff/update/:id').patch(catchErrors(uatSignOffController.update));
 router.route('/uat-signoff/delete/:id').delete(catchErrors(uatSignOffController.delete));
 router.route('/uat-signoff/:id/respond').patch(catchErrors(uatSignOffController.respond));
+router.route('/uat-signoff/:id/reverse-approval').patch(catchErrors(uatSignOffController.reverseApproval));
 router.route('/uat-signoff/:id/attach-pdf').patch(catchErrors(uatSignOffController.attachPdf));
 
 module.exports = router;

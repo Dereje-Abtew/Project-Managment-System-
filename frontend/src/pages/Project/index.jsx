@@ -17,7 +17,7 @@ export default function Project() {
   document.title = 'Project - PMS';
 
   const searchConfig = {
-    displayLabels: ['title', 'Service Provider'],
+    displayLabels: ['title', 'Stakeholder'],
     searchFields: ['title', 'ownerName.name'],
   };
   const entityDisplayLabels = ['title'];
@@ -33,7 +33,7 @@ export default function Project() {
       ...getColumnSearchProps('title'),
     },
     {
-      title: <b>Service Provider</b>,
+      title: <b>Stakeholder</b>,
       dataIndex: ['ownerName', 'name'],
       ...getColumnSearchProps(['ownerName', 'name']),
     },

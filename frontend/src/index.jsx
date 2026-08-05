@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 
 import App from './app';
 import './style/app.less';
+import './style/table-enhanced.css';
+import './style/table-override.css';
 import * as serviceWorker from './serviceWorker';
 
 import { Router as RouterHistory } from 'react-router-dom';

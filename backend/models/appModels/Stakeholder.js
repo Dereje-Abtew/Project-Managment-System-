@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
-const serviceProviderSchema = new mongoose.Schema({
+const stakeholderSchema = new mongoose.Schema({
   removed: {
     type: Boolean,
     default: false,
@@ -49,4 +49,4 @@ const serviceProviderSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('ServiceProvider', serviceProviderSchema);
+module.exports = mongoose.model('Stakeholder', stakeholderSchema);

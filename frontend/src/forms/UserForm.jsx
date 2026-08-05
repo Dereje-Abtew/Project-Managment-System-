@@ -71,6 +71,7 @@ export default function UserForm({ isUpdateForm = false }) {
             <Option value="Director">Director</Option>
             <Option value="Manager">Manager</Option>
             <Option value="Professional">Professional</Option>
+            <Option value="Stakeholder">Stakeholder</Option>
           </Select>
         </Form.Item>
       </div>
@@ -90,6 +91,12 @@ export default function UserForm({ isUpdateForm = false }) {
         <Form.Item noStyle shouldUpdate={(prev, curr) => prev.position !== curr.position}>
           {({ getFieldValue }) => {
             const pos = getFieldValue('position') || position;
+            
+            // Stakeholder position doesn't need chief/department/division
+            if (pos === 'Stakeholder') {
+              return null; // Don't show any organization field
+            }
+            
             if (pos === 'Chief') {
               return (
                 <Form.Item

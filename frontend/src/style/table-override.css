@@ -1,0 +1,73 @@
+/* ==========================================================================
+   TABLE HEADER BACKGROUND OVERRIDE - HIGHEST PRIORITY
+   Force white background on all table headers across the system
+   ========================================================================== */
+
+/* Override ALL possible table header background styles */
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > th:hover,
+.ant-table-thead > tr > th:focus,
+.ant-table-thead > tr > th:active,
+.ant-table-thead > tr > th::before,
+.ant-table-thead > tr > th::after,
+.ant-table thead > tr > th,
+.ant-table thead > tr > th:hover,
+.ant-table thead > tr > th:focus,
+table thead tr th,
+table thead tr th:hover {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #064e3b !important;
+}
+
+/* Remove any pseudo-elements that might add background */
+.ant-table-thead > tr > th::before,
+.ant-table-thead > tr > th::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}
+
+/* Ensure consistent header styling with VISIBLE TEXT */
+.ant-table-thead > tr > th {
+  color: #064e3b !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid #064e3b !important;
+  white-space: nowrap !important;
+  padding: 18px 20px !important;
+  overflow: visible !important;
+}
+
+/* Force text visibility in all elements */
+.ant-table-thead > tr > th,
+.ant-table-thead > tr > th span,
+.ant-table-thead > tr > th div,
+.ant-table-thead > tr > th .ant-table-column-title,
+.ant-table-thead > tr > th .ant-table-column-sorters,
+.ant-table-thead > tr > th > * {
+  color: #064e3b !important;
+}
+
+/* Remove any gradients that might be applied */
+.ant-table-thead > tr,
+.ant-table-thead,
+.ant-table thead {
+  background: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Override Ant Design theme variables if any */
+.ant-table-wrapper .ant-table-thead > tr > th {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #064e3b !important;
+}
+
+/* Ensure column titles are visible */
+.ant-table-column-title {
+  color: #064e3b !important;
+  z-index: 1;
+}

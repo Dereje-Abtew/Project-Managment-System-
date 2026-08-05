@@ -18,45 +18,61 @@ const BRAND_LIGHT = '#f0f7f4';
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 function StatusTag({ status }) {
+  if (status === 'agreed')
+    return <Tag icon={<span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>thumb_up</span>} color="success">Agreed</Tag>;
+  if (status === 'disagreed')
+    return <Tag icon={<span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>thumb_down</span>} color="error">Disagreed</Tag>;
   if (status === 'submitted')
     return <Tag icon={<span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>check_circle</span>} color="success">Responded</Tag>;
   return <Tag icon={<span className="material-symbols-outlined" style={{ fontSize: 14, verticalAlign: 'middle', marginRight: 4 }}>pending</span>} color="warning">Pending</Tag>;
 }
 
 // ── Async Project Select ────────────────────────────────────────────────────
+// After selecting a project from the list, we fetch the full record so that
+// the autopopulated ownerName (Stakeholder) object is guaranteed to be present.
 function ProjectSelect({ value, onChange, onProjectSelected }) {
   const [opts, setOpts] = useState([]);
-  const [full, setFull] = useState([]);
   const [busy, setBusy] = useState(false);
   const timer = useRef(null);
 
-  const fetch = useCallback(async (q) => {
+  const fetchList = useCallback(async (q) => {
     setBusy(true);
     try {
       const res = q
         ? await request.search({ entity: 'project', options: { q, fields: 'title,projectNumber' } })
         : await request.list({ entity: 'project', options: { items: 50 } });
       const data = Array.isArray(res?.result) ? res.result : [];
-      setFull(data);
-      setOpts(data.map((p) => ({ value: p._id, label: p.title })));
+      setOpts(data.map((p) => ({ value: p._id, label: p.title, _raw: p })));
     } catch { /* silent */ }
     finally { setBusy(false); }
   }, []);
 
-  useEffect(() => { fetch(''); }, [fetch]);
+  useEffect(() => { fetchList(''); }, [fetchList]);
+
+  const handleChange = async (id, option) => {
+    if (onChange) onChange(id);
+    if (!onProjectSelected) return;
+    // Fetch full project to get the populated ownerName (Stakeholder)
+    try {
+      const res = await request.read({ entity: 'project', id });
+      const fullProject = res?.result || option?._raw || {};
+      onProjectSelected(fullProject);
+    } catch {
+      // Fallback to the option data we already have
+      if (option?._raw) onProjectSelected(option._raw);
+    }
+  };
 
   return (
     <Select
-      showSearch filterOption={false} loading={busy} value={value}
-      placeholder="Search Project..." style={{ width: '100%' }}
-      onSearch={(q) => { clearTimeout(timer.current); timer.current = setTimeout(() => fetch(q), 300); }}
-      onChange={(id) => {
-        if (onChange) onChange(id);
-        if (onProjectSelected) {
-          const p = full.find((x) => x._id === id);
-          if (p) onProjectSelected(p);
-        }
-      }}
+      showSearch
+      filterOption={false}
+      loading={busy}
+      value={value}
+      placeholder="Search project by title…"
+      style={{ width: '100%' }}
+      onSearch={(q) => { clearTimeout(timer.current); timer.current = setTimeout(() => fetchList(q), 300); }}
+      onChange={handleChange}
       options={opts}
     />
   );
@@ -73,6 +89,8 @@ export default function UATSignOff() {
   const [form] = Form.useForm();
   const [featureForm] = Form.useForm();
 
+  // Resolved SP object from selected project (has _id, name, company, email)
+  const [selectedSP, setSelectedSP] = useState(null);
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -81,6 +99,12 @@ export default function UATSignOff() {
   // Create / Edit state
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  const projectUATCount = selectedProject
+    ? records.filter((r) => r.project?._id === selectedProject._id).length
+    : 0;
+  const hasExistingUAT = selectedProject && projectUATCount > 0 && !isEditing;
 
   // UAT Features state (the details)
   const [featuresList, setFeaturesList] = useState([]);
@@ -112,25 +136,42 @@ export default function UATSignOff() {
   });
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleCreateNew = () => {
+  const handleCreateNew = (keepProject = false) => {
+    const projectId = keepProject && selectedProject ? selectedProject._id : undefined;
     form.resetFields();
     form.setFieldsValue({
       sentBy: userName,
       date: dayjs().format('YYYY-MM-DD'),
+      project: projectId,
+      stakeholder: projectId ? (selectedSP?._id || selectedProject?.ownerName?._id) : undefined,
     });
     setFeaturesList([]);
     setIsEditing(false);
     setEditId(null);
+    if (keepProject) {
+      // Keep project and SP as-is so the user can create another UAT for the same project
+      setSelectedProject(selectedProject);
+    } else {
+      setSelectedProject(null);
+      setSelectedSP(null);
+    }
   };
 
   const handleEdit = (rec) => {
+    setSelectedProject(rec.project || null);
+    // Restore the SP object for read-only display
+    if (rec.stakeholder && rec.stakeholder._id) {
+      setSelectedSP(rec.stakeholder);
+    } else {
+      setSelectedSP(null);
+    }
     setIsEditing(true);
     setEditId(rec._id);
     form.setFieldsValue({
       project: rec.project?._id,
       sentBy: rec.sentBy,
       date: rec.date ? dayjs(rec.date).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
-      serviceProvider: rec.serviceProvider?._id,
+      stakeholder: rec.stakeholder?._id,
     });
     setFeaturesList(rec.features || []);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -143,6 +184,33 @@ export default function UATSignOff() {
     } catch { message.error('Delete failed.'); }
   };
 
+  const handleReverseApproval = async (record) => {
+    const reason = window.prompt('Enter a reason for reversing the approval:');
+    if (!reason || reason.trim().length < 10) {
+      message.error('A reverse reason of at least 10 characters is required.');
+      return;
+    }
+
+    try {
+      const res = await request.patch({
+        entity: `uat-signoff/${record._id}/reverse-approval`,
+        jsonData: {
+          reason: reason.trim(),
+          performedBy: userName,
+        },
+      });
+
+      if (res?.success) {
+        message.success('UAT approval reversed successfully.');
+        load();
+      } else {
+        message.error(res?.message || 'Reverse approval failed.');
+      }
+    } catch {
+      message.error('Reverse approval failed.');
+    }
+  };
+
   const submitMaster = async () => {
     try {
       const values = await form.validateFields();
@@ -152,8 +220,9 @@ export default function UATSignOff() {
         return;
       }
 
-      if (featuresList.length > 20) {
-        message.warning('Maximum 20 UAT items allowed.');
+      // Guard: stakeholder must be resolved from the selected project
+      if (!values.stakeholder) {
+        message.error('The selected project has no Stakeholder assigned. Please assign a Stakeholder to the project first, then try again.');
         return;
       }
 
@@ -163,7 +232,7 @@ export default function UATSignOff() {
         sentBy: values.sentBy,
         date: new Date().toISOString(),
         project: values.project,
-        serviceProvider: values.serviceProvider, // Might be undefined if no SP linked, backend should handle
+        stakeholder: values.stakeholder,
         features: featuresList.map((f, i) => ({ ...f, no: i + 1 })),
       };
 
@@ -173,7 +242,7 @@ export default function UATSignOff() {
 
       if (res?.success) {
         message.success(isEditing ? 'UAT record updated successfully.' : 'UAT record created successfully.');
-        handleCreateNew();
+        handleCreateNew(!isEditing);
         load();
       } else { message.error(res?.message || 'Save failed.'); }
     } catch (err) {
@@ -195,12 +264,8 @@ export default function UATSignOff() {
   const saveFeaturesFromModal = async () => {
     try {
       const values = await featureForm.validateFields();
-      if (!values.items || values.items.length < 2) {
-        message.warning('Please add at least 2 UAT items for a proper test plan.');
-        return;
-      }
-      if (values.items.length > 20) {
-        message.error('You can add up to 20 items maximum.');
+      if (!values.items || values.items.length < 1) {
+        message.warning('Please add at least one UAT item for the test plan.');
         return;
       }
       setFeaturesList(values.items);
@@ -213,22 +278,41 @@ export default function UATSignOff() {
   // ── Render Expanded Row (Detail Table) ────────────────────────────────────
   const expandedRowRender = (record) => {
     const detailCols = [
-      { title: 'No.', dataIndex: 'no', key: 'no', width: 60, align: 'center', render: (t) => <b>{t}</b> },
-      { title: 'Feature / Capability', dataIndex: 'feature', key: 'feature' },
-      { title: 'Business Validation Confirmed', dataIndex: 'businessValidationConfirmed', key: 'bvc', width: '30%' },
-      { title: 'Pass', dataIndex: 'pass', key: 'pass', width: 80, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#4caf50', verticalAlign: 'middle', fontSize: 20 }}>check_circle</span> : <span style={{ color: '#ccc' }}>—</span> },
-      { title: 'Fail', dataIndex: 'fail', key: 'fail', width: 80, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#f44336', verticalAlign: 'middle', fontSize: 20 }}>cancel</span> : <span style={{ color: '#ccc' }}>—</span> },
-      { title: 'Remarks', dataIndex: 'remark', key: 'remark', render: (t) => t || <Text type="secondary">—</Text> },
+      { title: 'No.', dataIndex: 'no', key: 'no', width: 80, align: 'center', render: (t) => <b>{t}</b> },
+      { title: 'Feature / Capability', dataIndex: 'feature', key: 'feature', width: 250 },
+      { title: 'Business Validation Confirmed', dataIndex: 'businessValidationConfirmed', key: 'bvc', width: 300 },
+      { title: 'Pass', dataIndex: 'pass', key: 'pass', width: 100, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#4caf50', verticalAlign: 'middle', fontSize: 20 }}>check_circle</span> : <span style={{ color: '#ccc' }}>—</span> },
+      { title: 'Fail', dataIndex: 'fail', key: 'fail', width: 100, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#f44336', verticalAlign: 'middle', fontSize: 20 }}>cancel</span> : <span style={{ color: '#ccc' }}>—</span> },
+      { title: 'Remarks', dataIndex: 'remark', key: 'remark', width: 300, render: (t) => t || <Text type="secondary">—</Text> },
     ];
     return (
-      <div style={{ margin: '10px 30px', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 4 }}>
+      <div style={{ margin: '10px 30px', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16, overflowX: 'auto' }}>
         <Table
           columns={detailCols}
           dataSource={record.features || []}
           pagination={false}
           size="small"
           rowKey="_id"
+          scroll={{ x: 'max-content' }}
         />
+        {(record.reviewHistory && record.reviewHistory.length > 0) && (
+          <div style={{ marginTop: 16, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
+            <Text strong style={{ display: 'block', marginBottom: 8 }}>Review History</Text>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {record.reviewHistory.map((entry, index) => (
+                <div key={`${entry.action}-${index}`} style={{ padding: 10, borderRadius: 8, background: '#f8fafb' }}>
+                  <Text strong>{entry.action}</Text>
+                  <div style={{ color: '#5f6368', fontSize: 12 }}>
+                    {entry.note || 'No note provided'}
+                  </div>
+                  <div style={{ color: '#888', fontSize: 12, marginTop: 4 }}>
+                    {entry.performedBy || 'System'} • {dayjs(entry.performedAt).format('MMM DD, YYYY HH:mm')} • {entry.statusBefore || '—'} → {entry.statusAfter || '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -251,22 +335,32 @@ export default function UATSignOff() {
       render: (_, r) => r.date ? dayjs(r.date).format('MMM DD, YYYY') : '—',
     },
     {
-      title: <b>Status</b>, key: 'status', width: 130,
-      render: (_, r) => <StatusTag status={r.responseStatus} />,
-    },
-    {
-      title: <b>Actions</b>, key: 'actions', width: 120, align: 'center',
+      title: <b>Actions</b>, key: 'actions', width: 150, align: 'center', fixed: 'right',
       render: (_, r) => (
-        <Space size={8}>
-          <Tooltip title="Edit">
-            <Button size="small" type="primary" ghost onClick={() => handleEdit(r)}>Edit</Button>
-          </Tooltip>
-          <Tooltip title="Delete UAT">
-            <Popconfirm title="Are you sure?" onConfirm={() => handleDelete(r._id)}>
-              <Button type="text" danger icon={<span className="material-symbols-outlined" style={{ fontSize: 18 }}>delete</span>} />
-            </Popconfirm>
-          </Tooltip>
-        </Space>
+        <Select
+          placeholder="Select action"
+          style={{ width: 130 }}
+          size="small"
+          onSelect={(value) => {
+            if (value === 'edit') {
+              handleEdit(r);
+            } else if (value === 'delete') {
+              Modal.confirm({
+                title: 'Are you sure?',
+                content: 'Do you want to delete this UAT record?',
+                onOk: () => handleDelete(r._id),
+              });
+            } else if (value === 'reverse') {
+              handleReverseApproval(r);
+            }
+          }}
+        >
+          <Select.Option value="edit">Edit</Select.Option>
+          {(r.signOffStatus === 'agreed' || r.signOffStatus === 'disagreed' || r.signOffStatus === 'submitted') && (
+            <Select.Option value="reverse">Reverse</Select.Option>
+          )}
+          <Select.Option value="delete">Delete</Select.Option>
+        </Select>
       ),
     },
   ];
@@ -304,39 +398,125 @@ export default function UATSignOff() {
         bodyStyle={{ padding: 32 }}
       >
         <Form form={form} layout="vertical">
+          {/* Hidden field stores the resolved Stakeholder _id */}
+          <Form.Item name="stakeholder" hidden>
+            <Input />
+          </Form.Item>
+
           <Row gutter={24} align="top">
             <Col xs={24} md={8}>
               <Form.Item label="Prepared By" name="sentBy" initialValue={userName} rules={[{ required: true }]}>
-                <Input readOnly style={{ background: '#f5f5f5', cursor: 'default' }} />
+                <Input readOnly style={{ cursor: 'default' }} />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
               <Form.Item label="Created Date" name="date" initialValue={dayjs().format('YYYY-MM-DD')}>
-                <Input readOnly style={{ background: '#f5f5f5', cursor: 'default' }} />
+                <Input readOnly style={{ cursor: 'default' }} />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item label={<Text strong>Project Name <span style={{ color: 'red' }}>*</span></Text>} name="project" rules={[{ required: true, message: 'Please select a project' }]}>
+              <Form.Item
+                label={<Text strong>Project Name <span style={{ color: 'red' }}>*</span></Text>}
+                name="project"
+                rules={[{ required: true, message: 'Please select a project' }]}
+                extra="Selecting a project will automatically assign the stakeholder."
+              >
                 <ProjectSelect onProjectSelected={(p) => {
-                  form.setFieldsValue({ serviceProvider: p.ownerName?._id || undefined });
+                  // ownerName is autopopulated by mongoose-autopopulate
+                  // It may be a full object { _id, name, company, email } or just an ID string
+                  const sp = p.ownerName;
+                  const spId = sp?._id || (typeof sp === 'string' ? sp : undefined);
+                  form.setFieldsValue({ stakeholder: spId || undefined });
+                  // Store the SP object for display
+                  if (sp && typeof sp === 'object' && sp._id) {
+                    setSelectedSP(sp); // fully populated
+                  } else if (spId) {
+                    setSelectedSP({ _id: spId, name: spId }); // partial — will show ID until next load
+                  } else {
+                    setSelectedSP(null);
+                  }
+                  setSelectedProject(p);
                 }} />
               </Form.Item>
+
+              {/* ── Stakeholder — auto-filled from project (like Send Requirement) ── */}
+              <Form.Item
+                label={
+                  <Space size={4}>
+                    <Text strong>Stakeholder</Text>
+                    <Tag color="blue" style={{ fontSize: 10, padding: '0 4px' }}>Auto-filled from project</Tag>
+                  </Space>
+                }
+                style={{ marginTop: 4 }}
+              >
+                {selectedSP && (selectedSP._id || selectedSP.name) ? (
+                  /* ✅ SP found — green badge like Send Requirement template box */
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 14px',
+                    background: '#f6ffed',
+                    border: '2px solid #52c41a',
+                    borderRadius: 8,
+                  }}>
+                    <span className="material-symbols-outlined" style={{ color: '#1a5c38', fontSize: 22 }}>business</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: '#1a5c38', fontSize: 14 }}>
+                        {selectedSP.name || '—'}
+                      </div>
+                      {(selectedSP.company || selectedSP.email) && (
+                        <div style={{ fontSize: 11, color: '#8c8c8c' }}>
+                          {[selectedSP.company, selectedSP.email].filter(Boolean).join(' · ')}
+                        </div>
+                      )}
+                    </div>
+                    <Tag color="success" style={{ fontSize: 11 }}>Linked to Project</Tag>
+                  </div>
+                ) : selectedProject ? (
+                  /* ❌ Project selected but no SP assigned */
+                  <Alert
+                    type="error"
+                    showIcon
+                    message="No Stakeholder assigned"
+                    description={
+                      <span>
+                        The project <b>{selectedProject.title}</b> has no Stakeholder linked.
+                        Please edit the project and assign a Stakeholder (Owner) before creating a UAT.
+                      </span>
+                    }
+                    style={{ borderRadius: 8 }}
+                  />
+                ) : (
+                  /* Neutral — no project selected yet */
+                  <Input
+                    readOnly
+                    placeholder="Will auto-fill when you select a project…"
+                    style={{ cursor: 'default', color: '#aaa' }}
+                  />
+                )}
+              </Form.Item>
+
+              {selectedProject && (
+                <div style={{ marginTop: 8 }}>
+                  <Text type="secondary" style={{ display: 'block' }}>
+                    Creating a new UAT for <b>{selectedProject.title}</b>. {projectUATCount === 0 ? 'No prior UAT exists for this project.' : `There ${projectUATCount === 1 ? 'is' : 'are'} ${projectUATCount} prior UAT ${projectUATCount === 1 ? 'record' : 'records'} for this project.`}
+                  </Text>
+                  {hasExistingUAT && (
+                    <Text type="danger" style={{ display: 'block', marginTop: 8 }}>
+                      A prior UAT already exists for this project. Creating another UAT record is disabled. Use the history table below to edit or view existing UATs.
+                    </Text>
+                  )}
+                </div>
+              )}
             </Col>
           </Row>
 
-          {/* Hidden field for SP compatibility with backend */}
-          <Form.Item name="serviceProvider" hidden><Input /></Form.Item>
-
-          <Divider style={{ margin: '12px 0 24px' }} />
-
-          {/* ── Feature Uploader Section ──────────────────────────────────── */}
           <Row align="middle" justify="space-between" style={{ marginBottom: 16 }}>
             <Col>
               <Text strong style={{ fontSize: 16 }}>Test Items (Features & Capabilities)</Text><br />
-              <Text type="secondary">Configure 2 to 20 test items for business validation.</Text>
+              <Text type="secondary">Configure one or more test items for business validation.</Text>
             </Col>
             <Col>
-              <Button type="dashed" onClick={openFeatureModal} style={{ borderColor: BRAND, color: BRAND, fontWeight: 500, borderRadius: 8, height: 40, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Button type="dashed" disabled={hasExistingUAT} onClick={openFeatureModal} style={{ borderColor: BRAND, color: BRAND, fontWeight: 500, borderRadius: 8, height: 40, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>add_circle</span>
                 {featuresList.length > 0 ? `Edit ${featuresList.length} Items` : 'Add UAT Items'}
               </Button>
@@ -375,6 +555,7 @@ export default function UATSignOff() {
             )}
             <Button
               type="primary"
+              disabled={hasExistingUAT}
               onClick={submitMaster}
               loading={submitting}
               style={{ background: BRAND, borderColor: BRAND, borderRadius: 20, height: 40, padding: '0 24px', fontSize: 15, fontWeight: 500 }}
@@ -438,7 +619,7 @@ export default function UATSignOff() {
         destroyOnClose
         okButtonProps={{ style: { backgroundColor: BRAND, borderColor: BRAND } }}
       >
-        <Alert message="Provide details for each test item. You can add up to 20 items." type="info" showIcon style={{ marginBottom: 16 }} />
+        <Alert message="Provide details for each test item. You can add as many items as needed." type="info" showIcon style={{ marginBottom: 16 }} />
 
         <Form form={featureForm} layout="vertical">
           <Form.List name="items">
@@ -508,11 +689,7 @@ export default function UATSignOff() {
                   <Button
                     type="dashed"
                     onClick={() => {
-                      if (fields.length >= 20) {
-                        message.warning('Maximum 20 items reached.');
-                      } else {
-                        add({ feature: '', businessValidationConfirmed: '', pass: false, fail: false, remark: '' });
-                      }
+                      add({ feature: '', businessValidationConfirmed: '', pass: false, fail: false, remark: '' });
                     }}
                     style={{ width: '100%', borderColor: BRAND, color: BRAND, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   >

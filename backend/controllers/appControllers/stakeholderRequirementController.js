@@ -2,8 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-const ServiceProviderRequirement = mongoose.model('ServiceProviderRequirement');
-const ServiceProvider = mongoose.model('ServiceProvider');
+const StakeholderRequirement = mongoose.model('StakeholderRequirement');
+const Stakeholder = mongoose.model('Stakeholder');
 const Project = mongoose.model('Project');
 const User = mongoose.model('User');
 const Role = mongoose.model('Role');
@@ -60,22 +60,22 @@ exports.login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Username and password are required.' });
     }
 
-    const provider = await ServiceProvider.findOne({
+    const provider = await Stakeholder.findOne({
       $or: [{ username }, { email: username }],
       removed: false,
     });
 
     if (!provider || !provider.password) {
-      return res.status(400).json({ success: false, message: 'Invalid service provider credentials.' });
+      return res.status(400).json({ success: false, message: 'Invalid stakeholder credentials.' });
     }
 
     const isMatch = await bcrypt.compare(password, provider.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid service provider credentials.' });
+      return res.status(400).json({ success: false, message: 'Invalid stakeholder credentials.' });
     }
 
     const token = jwt.sign(
-      { id: provider._id, type: 'serviceProvider', username: provider.username || provider.email },
+      { id: provider._id, type: 'stakeholder', username: provider.username || provider.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -84,14 +84,15 @@ exports.login = async (req, res) => {
       success: true,
       result: {
         token,
-        serviceProvider: {
+        stakeholder: {
           _id: provider._id,
           name: provider.name,
           email: provider.email,
           username: provider.username || provider.email,
+          company: provider.company || '',
         },
       },
-      message: 'Service provider logged in successfully.',
+      message: 'Stakeholder logged in successfully.',
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
@@ -108,7 +109,7 @@ exports.create = async (req, res) => {
     const payload = {
       ...req.body,
       submittedBy: req.user ? req.user._id : undefined,
-      submittedByType: req.user ? 'internal_user' : 'service_provider',
+      submittedByType: req.user ? 'internal_user' : 'stakeholder',
       senderName: req.body.senderName || (userIdentity?.name || 'Unknown'),
       senderEmail: req.body.senderEmail || (userIdentity?.email || ''),
       senderPhone: req.body.senderPhone || (userIdentity?.phone || ''),
@@ -145,9 +146,9 @@ exports.create = async (req, res) => {
       }
     }
 
-    // serviceProvider is optional now; if provided we do not block creation when not found
+    // stakeholder is optional now; if provided we do not block creation when not found
 
-    const result = await new ServiceProviderRequirement(payload).save();
+    const result = await new StakeholderRequirement(payload).save();
 
     // Log the initial submission
     result.activityLog.push({
@@ -170,7 +171,7 @@ exports.list = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to view requirements.' });
     }
 
-    const result = await ServiceProviderRequirement.find({ removed: false }).sort({ created: -1 });
+    const result = await StakeholderRequirement.find({ removed: false }).sort({ created: -1 });
     return res.status(200).json({ success: true, result, message: 'Requirements fetched successfully.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message || 'Oops there is an Error' });
@@ -183,7 +184,7 @@ exports.listMine = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
-    const result = await ServiceProviderRequirement.find({
+    const result = await StakeholderRequirement.find({
       removed: false,
       submittedBy: req.user._id,
     }).sort({ created: -1 });
@@ -199,7 +200,7 @@ exports.read = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to view this requirement.' });
     }
 
-    const result = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    const result = await StakeholderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!result) return res.status(404).json({ success: false, message: 'Requirement not found.' });
     return res.status(200).json({ success: true, result, message: 'Requirement fetched successfully.' });
   } catch (err) {
@@ -213,7 +214,7 @@ exports.approve = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to approve requirements.' });
     }
 
-    const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    const requirement = await StakeholderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
     requirement.status = 'approved';
@@ -306,7 +307,7 @@ exports.reject = async (req, res) => {
       });
     }
 
-    const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    const requirement = await StakeholderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
     requirement.status = 'rejected';
@@ -346,7 +347,7 @@ exports.reverseApproval = async (req, res) => {
       });
     }
 
-    const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    const requirement = await StakeholderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
     if (requirement.status !== 'approved') {
@@ -385,7 +386,7 @@ exports.enhancement = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to submit enhancements.' });
     }
 
-    const requirement = await ServiceProviderRequirement.findOne({ _id: req.params.id, removed: false });
+    const requirement = await StakeholderRequirement.findOne({ _id: req.params.id, removed: false });
     if (!requirement) return res.status(404).json({ success: false, message: 'Requirement not found.' });
 
     if (requirement.status !== 'rejected') {
@@ -445,7 +446,7 @@ exports.delete = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You do not have permission to delete requirements.' });
     }
 
-    const result = await ServiceProviderRequirement.findOneAndUpdate({ _id: req.params.id, removed: false }, { removed: true, updated: new Date() }, { new: true });
+    const result = await StakeholderRequirement.findOneAndUpdate({ _id: req.params.id, removed: false }, { removed: true, updated: new Date() }, { new: true });
     if (!result) return res.status(404).json({ success: false, message: 'Requirement not found.' });
     return res.status(200).json({ success: true, result, message: 'Requirement deleted successfully.' });
   } catch (err) {

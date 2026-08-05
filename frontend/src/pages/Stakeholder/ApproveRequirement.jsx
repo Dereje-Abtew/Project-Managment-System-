@@ -188,14 +188,14 @@ export default function ApproveRequirement() {
   const [reverseSubmitting, setReverseSubmitting] = useState(false);
   const [reverseForm]  = Form.useForm();
 
-  // Templates indexed by serviceProvider id — for the Template column
+  // Templates indexed by stakeholder id — for the Template column
   const [templateMap, setTemplateMap] = useState({});
 
   // ── load ───────────────────────────────────────────────────────────────────
   const load = async () => {
     setLoading(true);
     try {
-      const res = await request.list({ entity: 'serviceprovider-requirement' });
+      const res = await request.list({ entity: 'stakeholder-requirement' });
       setRequirements(Array.isArray(res?.result) ? res.result : []);
     } catch {
       message.error('Unable to load requirements.');
@@ -215,7 +215,7 @@ export default function ApproveRequirement() {
           if (t.isGlobal) {
             if (!globalTemplate) globalTemplate = t;  // most recent global
           } else {
-            const spId = t.serviceProvider?._id || t.serviceProvider;
+            const spId = t.stakeholder?._id || t.stakeholder;
             if (spId && !map[spId]) map[spId] = t;    // specific wins
           }
         }
@@ -233,7 +233,7 @@ export default function ApproveRequirement() {
     setApprovingId(record._id);
     try {
       const res = await request.patch({
-        entity: `serviceprovider-requirement/approve/${record._id}`,
+        entity: `stakeholder-requirement/approve/${record._id}`,
         jsonData: {},
       });
       if (res?.success) {
@@ -263,7 +263,7 @@ export default function ApproveRequirement() {
     setRejectSubmitting(true);
     try {
       const res = await request.patch({
-        entity: `serviceprovider-requirement/reject/${rejectTarget._id}`,
+        entity: `stakeholder-requirement/reject/${rejectTarget._id}`,
         jsonData: { rejectionReason: values.rejectionReason },
       });
       if (res?.success) {
@@ -296,7 +296,7 @@ export default function ApproveRequirement() {
     setReverseSubmitting(true);
     try {
       const res = await request.patch({
-        entity: `serviceprovider-requirement/reverse/${reverseTarget._id}`,
+        entity: `stakeholder-requirement/reverse/${reverseTarget._id}`,
         jsonData: { reverseReason: values.reverseReason },
       });
       if (res?.success) {
@@ -323,7 +323,7 @@ export default function ApproveRequirement() {
     setDetailVisible(true);
     setSelected(null);
     try {
-      const res = await request.read({ entity: 'serviceprovider-requirement', id: record._id });
+      const res = await request.read({ entity: 'stakeholder-requirement', id: record._id });
       if (res?.success) setSelected(res.result);
       else message.error('Unable to load details.');
     } catch { message.error('Unable to load details.');
@@ -371,16 +371,16 @@ export default function ApproveRequirement() {
       render: (_, r) => fullName(r.rejectedBy),
     },
     {
-      // Reference template column — shows downloadable template for this row's service provider
+      // Reference template column — shows downloadable template for this row's stakeholder
       title: (
-        <Tooltip title="Reference template for the service provider linked to this requirement">
+        <Tooltip title="Reference template for the stakeholder linked to this requirement">
           <b>Template</b>
         </Tooltip>
       ),
       key: 'template',
       width: 210,
       render: (_, r) => {
-        const spId = r.serviceProvider?._id || r.serviceProvider;
+        const spId = r.stakeholder?._id || r.stakeholder;
         // Specific template wins; fall back to global template if none specific
         const tmpl = spId
           ? (templateMap[spId] || templateMap['__global__'] || null)
@@ -552,13 +552,13 @@ export default function ApproveRequirement() {
             <Descriptions.Item label="Sender">{selected.senderName}</Descriptions.Item>
             <Descriptions.Item label="Email">{selected.senderEmail || '—'}</Descriptions.Item>
             <Descriptions.Item label="Phone">{selected.senderPhone || '—'}</Descriptions.Item>
-            {selected.serviceProvider && (
-              <Descriptions.Item label="Service Provider">
+            {selected.stakeholder && (
+              <Descriptions.Item label="Stakeholder">
                 <Tag color="geekblue" style={{ fontWeight: 500 }}>
-                  {selected.serviceProvider?.name || '—'}
+                  {selected.stakeholder?.name || '—'}
                 </Tag>
                 {(() => {
-                  const spId = selected.serviceProvider?._id || selected.serviceProvider;
+                  const spId = selected.stakeholder?._id || selected.stakeholder;
                   // Specific template wins; fall back to global
                   const tmpl = spId
                     ? (templateMap[spId] || templateMap['__global__'] || null)
@@ -710,11 +710,11 @@ export default function ApproveRequirement() {
         <Form form={rejectForm} layout="vertical" style={{ marginTop: 12 }}>
           <Form.Item label="Date">
             <Input readOnly value={new Date().toLocaleDateString()}
-              style={{ background: '#f5f5f5', cursor: 'default' }} />
+              style={{ cursor: 'default' }} />
           </Form.Item>
           <Form.Item label="Name">
             <Input readOnly value={approverName}
-              style={{ background: '#f5f5f5', cursor: 'default' }} />
+              style={{ cursor: 'default' }} />
           </Form.Item>
           <Form.Item
             label="Reason"
@@ -761,11 +761,11 @@ export default function ApproveRequirement() {
         <Form form={reverseForm} layout="vertical" style={{ marginTop: 4 }}>
           <Form.Item label="Date">
             <Input readOnly value={new Date().toLocaleDateString()}
-              style={{ background: '#f5f5f5', cursor: 'default' }} />
+              style={{ cursor: 'default' }} />
           </Form.Item>
           <Form.Item label="Approver Name">
             <Input readOnly value={approverName}
-              style={{ background: '#f5f5f5', cursor: 'default' }} />
+              style={{ cursor: 'default' }} />
           </Form.Item>
           <Form.Item
             label="Reason for Reversal"

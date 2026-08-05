@@ -88,9 +88,19 @@ const create = async (Model, req, res) => {
     }
 
     if (Model.schema.paths.password) {
-      const passwordToHash = req.body.password && req.body.password.trim() !== '' ? req.body.password : 'changeme';
-      const newUser = new User();
-      req.body.password = newUser.generateHash(passwordToHash);
+      // For stakeholders: require an explicit password (no silent 'changeme' default)
+      if (Model.collection.name === 'stakeholders') {
+        const rawPassword = req.body.password && req.body.password.trim() !== '' ? req.body.password.trim() : null;
+        if (!rawPassword) {
+          return res.status(400).json({ success: false, message: 'A password is required for the stakeholder portal login.' });
+        }
+        const newUser = new User();
+        req.body.password = newUser.generateHash(rawPassword);
+      } else {
+        const passwordToHash = req.body.password && req.body.password.trim() !== '' ? req.body.password : 'changeme';
+        const newUser = new User();
+        req.body.password = newUser.generateHash(passwordToHash);
+      }
     }
 
     const result = await new Model(req.body).save();

@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Dropdown, Button, PageHeader, Table, Descriptions, Menu, Checkbox, Space, Input } from 'antd';
+import { Dropdown, Button, PageHeader, Table, Descriptions, Menu, Checkbox, Space, Input, Tooltip } from 'antd';
 
-import { EditOutlined, ReloadOutlined, DownOutlined, UnorderedListOutlined, DownloadOutlined } from '@ant-design/icons';
+import { 
+  EditOutlined, 
+  ReloadOutlined, 
+  DownOutlined, 
+  UnorderedListOutlined, 
+  DownloadOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  EyeOutlined
+} from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { crud } from '@/redux/crud/actions';
 import { selectListItems } from '@/redux/crud/selectors';
@@ -16,16 +25,29 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
   let { entity, dataTableColumns: originalColumns = [], DATATABLE_TITLE, searchConfig = {} } = config;
 
   const actionColumn = {
-    title: 'Action',
+    title: 'Actions',
     key: 'action',
+    width: 120,
+    fixed: 'right',
+    align: 'center',
     render: (row) => (
       <Dropdown
         overlay={DropDownRowMenu({ row, config, exportRow: (format) => handleExport(format, row) })}
         trigger={['click']}
         placement="bottomRight"
       >
-        <EditOutlined
-          style={{ cursor: 'pointer', color: COMPANY_BLUE_COLOR, fontSize: COMPANY_ICONS_SIZE }}
+        <Button 
+          icon={<EditOutlined />}
+          size="small"
+          style={{ 
+            borderRadius: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px 12px',
+            height: 'auto',
+            minHeight: '32px'
+          }}
         />
       </Dropdown>
     ),
@@ -34,12 +56,22 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
   const serialColumn = {
     title: '#',
     key: 'serial',
-    width: 80,
+    width: 70,
     align: 'center',
+    fixed: 'left',
     render: (_text, _record, index) => {
       const current = pagination?.current || 1;
       const pageSize = pagination?.pageSize || 10;
-      return (current - 1) * pageSize + (index + 1);
+      const serialNumber = (current - 1) * pageSize + (index + 1);
+      return (
+        <span style={{ 
+          fontWeight: 600, 
+          color: '#6b7280',
+          fontSize: '13px'
+        }}>
+          {serialNumber}
+        </span>
+      );
     },
   };
 
@@ -95,7 +127,16 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
 
   const styledColumns = filteredColumns.map(col => ({
     ...col,
-    onHeaderCell: () => ({ style: { whiteSpace: 'nowrap', fontWeight: 600 } }),
+    onHeaderCell: () => ({ 
+      style: { 
+        whiteSpace: 'nowrap', 
+        fontWeight: 700,
+        textAlign: col.align || 'left',
+        overflow: 'visible',
+        color: '#064e3b'
+      } 
+    }),
+    ellipsis: false,
   }));
 
   // Global search state (client-side filtering when searchConfig provided)
@@ -176,15 +217,45 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
 
   const columnMenu = (
     <Menu onClick={(e) => e.domEvent.stopPropagation()}>
-      <Menu.ItemGroup title="Toggle Columns">
-        <div style={{ display: 'flex', flexDirection: 'column', padding: '8px 12px', gap: '6px' }}>
+      <Menu.ItemGroup title={
+        <span style={{ 
+          fontWeight: 600, 
+          color: '#064e3b',
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <EyeOutlined /> Column Visibility
+        </span>
+      }>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          padding: '12px 16px', 
+          gap: '8px',
+          maxHeight: '400px',
+          overflowY: 'auto'
+        }}>
           {dataTableColumns
             .filter(c => c.key && c.key !== 'action' && c.key !== 'serial')
             .map(c => (
               <label
                 key={c.key}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px' }}
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  cursor: 'pointer', 
+                  fontSize: '13px',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  transition: 'background-color 0.2s ease',
+                  backgroundColor: visibleColumns.includes(c.key) ? '#f0fdf4' : 'transparent'
+                }}
                 onClick={(e) => e.stopPropagation()}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0fdf4'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = visibleColumns.includes(c.key) ? '#f0fdf4' : 'transparent'}
               >
                 <input
                   type="checkbox"
@@ -195,9 +266,14 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
                       : visibleColumns.filter(k => k !== c.key);
                     setVisibleColumns(newVis);
                   }}
+                  style={{ 
+                    cursor: 'pointer',
+                    accentColor: '#064e3b'
+                  }}
                 />
-                {/* columnLabel is a plain-text label for the menu */}
-                {c.columnLabel || (typeof c.title === 'string' ? c.title : c.key)}
+                <span style={{ color: visibleColumns.includes(c.key) ? '#064e3b' : '#6b7280' }}>
+                  {c.columnLabel || (typeof c.title === 'string' ? c.title : c.key)}
+                </span>
               </label>
             ))
           }
@@ -214,27 +290,41 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
           title={DATATABLE_TITLE}
           ghost={false}
           extra={[
-              <Input.Search
-                placeholder={searchConfig.displayLabels ? `Search ${searchConfig.displayLabels.join(', ')}` : 'Search…'}
-                allowClear
-                onSearch={(v) => setGlobalSearch(v)}
-                onChange={(e) => setGlobalSearch(e.target.value)}
-                style={{ width: 240, marginRight: 8 }}
-                key="global-search"
-              />,
-              <Button onClick={handelDataTableLoad} key={`${uniqueId()}`} icon={<ReloadOutlined />}>
+            <Input.Search
+              placeholder={searchConfig.displayLabels ? `Search ${searchConfig.displayLabels.join(', ')}` : 'Search…'}
+              allowClear
+              prefix={<SearchOutlined style={{ color: '#9ca3af' }} />}
+              onSearch={(v) => setGlobalSearch(v)}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+              style={{ width: 280, marginRight: 8 }}
+              key="global-search"
+            />,
+            <Tooltip title="Refresh data" key={`${uniqueId()}`}>
+              <Button 
+                onClick={handelDataTableLoad} 
+                icon={<ReloadOutlined />}
+                style={{ marginRight: 8 }}
+              >
                 Refresh
-              </Button>,
-            <Dropdown key="column-visibility" overlay={columnMenu} trigger={['click']}>
-              <Button icon={<UnorderedListOutlined />} />
-            </Dropdown>,
-            <Dropdown key="export-data" overlay={exportMenu} trigger={['click']}>
-              <Button icon={<DownloadOutlined />}><DownOutlined /></Button>
-            </Dropdown>,
+              </Button>
+            </Tooltip>,
+            <Tooltip title="Show/Hide columns" key="column-visibility">
+              <Dropdown overlay={columnMenu} trigger={['click']}>
+                <Button icon={<UnorderedListOutlined />} style={{ marginRight: 8 }} />
+              </Dropdown>
+            </Tooltip>,
+            <Tooltip title="Export data" key="export-data">
+              <Dropdown overlay={exportMenu} trigger={['click']}>
+                <Button icon={<DownloadOutlined />} style={{ marginRight: 8 }}>
+                  <DownOutlined />
+                </Button>
+              </Dropdown>
+            </Tooltip>,
             <AddNewItem key={`${uniqueId()}`} config={config} />,
           ]}
           style={{
-            padding: '20px 0px',
+            padding: '24px 0px',
+            marginBottom: '16px'
           }}
         ></PageHeader>
       </div>
@@ -244,20 +334,41 @@ export default function DataTable({ config, DropDownRowMenu, AddNewItem }) {
           <PageLoader />
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div style={{ 
+          overflowX: 'auto',
+          marginTop: '8px'
+        }}>
           <Table
             columns={tableColumns}
             rowKey={(item) => item._id}
-            dataSource={items}
-            pagination={pagination}
+            dataSource={displayedItems}
+            pagination={{
+              ...pagination,
+              showSizeChanger: true,
+              showTotal: (total, range) => (
+                <span style={{ 
+                  fontSize: '13px', 
+                  color: '#6b7280',
+                  fontWeight: 500 
+                }}>
+                  Showing {range[0]}-{range[1]} of {total} items
+                </span>
+              ),
+              pageSizeOptions: ['10', '20', '50', '100'],
+            }}
             loading={listIsLoading}
             onChange={handelDataTableLoad}
-            scroll={{ x: Math.max(
-              // compute a minimum width based on column widths (fallback 150 each)
-              tableColumns.reduce((sum, c) => sum + (c.width || 150), 0),
-              800
-            ) }}
-            
+            scroll={{ 
+              x: Math.max(
+                tableColumns.reduce((sum, c) => sum + (c.width || 150), 0),
+                800
+              ),
+              y: null
+            }}
+            rowClassName={(record, index) => 
+              index % 2 === 0 ? 'table-row-light' : 'table-row-light'
+            }
+            size="middle"
           />
         </div>
       )}

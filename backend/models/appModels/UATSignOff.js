@@ -4,9 +4,9 @@ mongoose.Promise = global.Promise;
 /**
  * UATSignOff
  *
- * A UAT sign-off document is sent from the PM team to a service provider.
- * It contains a list of features/capabilities to be tested. The service
- * provider reviews each feature and marks it Pass / Fail with an optional
+ * A UAT sign-off document is sent from the PM team to a stakeholder.
+ * It contains a list of features/capabilities to be tested. The stakeholder
+ * reviews each feature and marks it Pass / Fail with an optional
  * remark, then submits the whole form in one action.
  *
  * After submission, a PDF report is generated and can be attached to the
@@ -46,11 +46,11 @@ const uatSignOffSchema = new mongoose.Schema({
     required: true,
     autopopulate: { select: 'title projectNumber ownerName' },
   },
-  serviceProvider: {
+  stakeholder: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ServiceProvider',
+    ref: 'User',
     required: false,
-    autopopulate: { select: 'name email company' },
+    autopopulate: { select: 'firstName lastName email position' },
   },
   features: { type: [featureSchema], default: [] },
   responseStatus: {
@@ -68,6 +68,19 @@ const uatSignOffSchema = new mongoose.Schema({
   respondedAt: { type: Date },
   respondedBy: { type: String, default: '' },
   overallRemark: { type: String, default: '' },
+  reviewHistory: {
+    type: [
+      {
+        action: { type: String, trim: true },
+        performedBy: { type: String, default: '' },
+        performedAt: { type: Date, default: Date.now },
+        note: { type: String, default: '' },
+        statusBefore: { type: String, default: '' },
+        statusAfter: { type: String, default: '' },
+      }
+    ],
+    default: [],
+  },
   pdfReport: {
     name: { type: String, default: '' },
     url: { type: String, default: '' },

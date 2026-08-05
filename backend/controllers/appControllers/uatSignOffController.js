@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const PDFDocument = require('pdfkit');
+const { pushHistoryEntry, getNextStatusFromAction } = require('@/utils/uatWorkflow');
 
 const UATSignOff = mongoose.model('UATSignOff');
 
@@ -27,7 +28,7 @@ function buildPdfBuffer(record) {
     doc.fontSize(11);
     doc.text(`UAT Number: ${record.uatNumber || 'N/A'}`);
     doc.text(`Project: ${record.project?.title || record.project || 'N/A'}`);
-    doc.text(`Service Provider: ${record.serviceProvider?.name || record.serviceProvider || 'N/A'}`);
+    doc.text(`Stakeholder: ${record.serviceProvider?.name || record.serviceProvider || 'N/A'}`);
     doc.text(`Sent By: ${record.sentBy || 'N/A'}`);
     doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`);
     doc.text(`Status: ${record.responseStatus === 'submitted' ? 'Submitted' : 'Pending'}`);
@@ -106,6 +107,7 @@ exports.create = async (req, res) => {
     if (!serviceProvider) {
       const Project = mongoose.model('Project');
       const projectDoc = await Project.findOne({ _id: project, removed: false }).populate('ownerName');
+      // ownerName is now a User reference (stakeholder user)
       serviceProvider = projectDoc?.ownerName?._id;
     }
 
@@ -226,6 +228,7 @@ exports.respond = async (req, res) => {
     if (!record) return res.status(404).json({ success: false, message: 'UAT sign-off not found.' });
 
     const { respondedBy, overallRemark, features } = req.body;
+    const previousStatus = record.signOffStatus || 'pending';
 
     if (!Array.isArray(features) || features.length === 0) {
       return res.status(400).json({ success: false, message: 'Feature results are required.' });
@@ -254,6 +257,14 @@ exports.respond = async (req, res) => {
     record.respondedAt = new Date();
     record.respondedBy = respondedBy || '';
     record.overallRemark = overallRemark || '';
+    if (!Array.isArray(record.reviewHistory)) record.reviewHistory = [];
+    pushHistoryEntry(record.reviewHistory, {
+      action: 'submitted',
+      performedBy: respondedBy || '',
+      note: overallRemark || 'UAT response submitted.',
+      statusBefore: previousStatus,
+      statusAfter: 'submitted',
+    }, new Date());
 
     const pdfBuffer = await buildPdfBuffer(record);
     const pdfDataUrl = `data:application/pdf;base64,${pdfBuffer.toString('base64')}`;
@@ -288,6 +299,38 @@ exports.attachPdf = async (req, res) => {
     await UATRecord.save();
 
     return res.status(200).json({ success: true, result: UATRecord, message: 'PDF report attached to project.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.reverseApproval = async (req, res) => {
+  try {
+    const record = await UATSignOff.findOne({ _id: req.params.id, removed: false });
+    if (!record) return res.status(404).json({ success: false, message: 'UAT sign-off not found.' });
+
+    const reverseReason = (req.body.reason || '').trim();
+    if (!reverseReason || reverseReason.length < 10) {
+      return res.status(400).json({ success: false, message: 'A reverse reason is required with at least 10 characters.' });
+    }
+
+    const previousStatus = record.signOffStatus || 'pending';
+    record.signOffStatus = 'pending';
+    record.signOffReason = reverseReason;
+    record.signOffAt = new Date();
+    record.updated = new Date();
+    record.responseStatus = 'pending';
+    if (!Array.isArray(record.reviewHistory)) record.reviewHistory = [];
+    pushHistoryEntry(record.reviewHistory, {
+      action: 'approval_reversed',
+      performedBy: req.body.performedBy || '',
+      note: reverseReason,
+      statusBefore: previousStatus,
+      statusAfter: 'pending',
+    }, new Date());
+
+    await record.save();
+    return res.status(200).json({ success: true, result: record, message: 'UAT approval reversed successfully.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
   }

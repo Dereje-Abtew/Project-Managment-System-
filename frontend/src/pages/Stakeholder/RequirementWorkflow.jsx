@@ -26,7 +26,7 @@ export default function RequirementWorkflow() {
   const loadRequirements = async () => {
     try {
       setLoading(true);
-      const response = await request.list({ entity: 'serviceprovider-requirement' });
+      const response = await request.list({ entity: 'stakeholder-requirement' });
       setRequirements(Array.isArray(response?.result) ? response.result : []);
     } catch (error) {
       message.error('Unable to load requirements.');
@@ -74,7 +74,7 @@ export default function RequirementWorkflow() {
       setSubmitting(true);
       // attach uploaded files
       const payload = { ...values, attachments };
-      const response = await request.create({ entity: 'serviceprovider-requirement', jsonData: payload });
+      const response = await request.create({ entity: 'stakeholder-requirement', jsonData: payload });
       if (response?.success) {
         message.success('Requirement submitted successfully.');
         form.resetFields();
@@ -90,7 +90,7 @@ export default function RequirementWorkflow() {
 
   const handleApprove = async (record) => {
     try {
-      const response = await request.patch({ entity: `serviceprovider-requirement/approve/${record._id}`, jsonData: {} });
+      const response = await request.patch({ entity: `stakeholder-requirement/approve/${record._id}`, jsonData: {} });
       if (response?.success) {
         message.success('Requirement approved.');
         loadRequirements();
@@ -102,7 +102,7 @@ export default function RequirementWorkflow() {
 
   const viewDetails = async (record) => {
     try {
-      const response = await request.read({ entity: 'serviceprovider-requirement', id: record._id });
+      const response = await request.read({ entity: 'stakeholder-requirement', id: record._id });
       if (response?.success) {
         setSelectedRequirement(response.result);
         setDetailVisible(true);
@@ -121,7 +121,7 @@ export default function RequirementWorkflow() {
   const submitReject = async () => {
     if (!rejectReason || !rejectingRecord) return message.error('Please enter a reason for rejection.');
     try {
-      const response = await request.patch({ entity: `serviceprovider-requirement/reject/${rejectingRecord._id}`, jsonData: { approvalNotes: rejectReason } });
+      const response = await request.patch({ entity: `stakeholder-requirement/reject/${rejectingRecord._id}`, jsonData: { approvalNotes: rejectReason } });
       if (response?.success) {
         message.success('Requirement rejected.');
         setRejectModalVisible(false);
@@ -208,7 +208,7 @@ export default function RequirementWorkflow() {
                   </Form.Item>
                 </Col>
               </Row>
-              {/* Service provider, title and description removed per request. */}
+              {/* Stakeholder, title and description removed per request. */}
 
               <Form.Item label="Attachment (PDF/DOC/DOCX)" required>
                 <Upload beforeUpload={beforeUpload} multiple={false} accept=".pdf,.doc,.docx">

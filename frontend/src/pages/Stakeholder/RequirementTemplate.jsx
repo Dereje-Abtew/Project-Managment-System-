@@ -36,7 +36,7 @@ function downloadFile(f) {
   } catch { message.error('Could not download the file.'); }
 }
 
-// Sentinel value used in the select to represent "All Service Providers"
+// Sentinel value used in the select to represent "All Stakeholders"
 const ALL_VALUE = 'all';
 
 export default function RequirementTemplate() {
@@ -72,7 +72,7 @@ export default function RequirementTemplate() {
 
   const loadProviders = useCallback(async () => {
     try {
-      const res = await request.list({ entity: 'serviceprovider' });
+      const res = await request.list({ entity: 'stakeholder' });
       setProviders(Array.isArray(res?.result) ? res.result : []);
     } catch { /* non-fatal */ }
   }, []);
@@ -103,16 +103,16 @@ export default function RequirementTemplate() {
       const res = await request.create({
         entity: 'requirement-template',
         jsonData: {
-          serviceProvider: values.serviceProvider,   // "all" or ObjectId string
+          stakeholder: values.stakeholder,   // "all" or ObjectId string
           title:           values.title || file.name,
           file,
         },
       });
       if (res?.success) {
-        const isGlobal = values.serviceProvider === ALL_VALUE;
+        const isGlobal = values.stakeholder === ALL_VALUE;
         message.success(
           isGlobal
-            ? 'Global template uploaded — applies to all service providers.'
+            ? 'Global template uploaded — applies to all stakeholders.'
             : 'Template uploaded successfully.'
         );
         form.resetFields();
@@ -155,14 +155,14 @@ export default function RequirementTemplate() {
       ),
     },
     {
-      title: <b>Service Provider</b>, key:'sp',
+      title: <b>Stakeholder</b>, key:'sp',
       render:(_, r) => r.isGlobal ? (
         <Tag color="purple" icon={<GlobalOutlined />} style={{ fontWeight:600 }}>
-          All Service Providers
+          All Stakeholders
         </Tag>
       ) : (
         <Tag color="geekblue" style={{ fontWeight:500 }}>
-          {r.serviceProvider?.name || '—'}
+          {r.stakeholder?.name || '—'}
         </Tag>
       ),
     },
@@ -215,7 +215,7 @@ export default function RequirementTemplate() {
   const spOptions = [
     {
       value: ALL_VALUE,
-      label: '🌐  All Service Providers',
+      label: '🌐  All Stakeholders',
     },
     ...providers.map(p => ({
       value: p._id,
@@ -235,7 +235,7 @@ export default function RequirementTemplate() {
         <div>
           <Title level={4} style={{ margin:0 }}>Requirement Templates</Title>
           <Text type="secondary">
-            Upload a reference template per service provider — or select <b>All</b> to apply one
+            Upload a reference template per stakeholder — or select <b>All</b> to apply one
             template to every provider. Senders must download and use this as the basis of their submission.
           </Text>
         </div>
@@ -256,7 +256,7 @@ export default function RequirementTemplate() {
               <Col xs={24} sm={8}>
                 <Form.Item label="Uploaded By">
                   <Input readOnly value={uploaderName}
-                    style={{ background:'#f5f5f5', cursor:'default' }} />
+                    style={{ cursor:'default' }} />
                 </Form.Item>
               </Col>
 
@@ -264,27 +264,27 @@ export default function RequirementTemplate() {
               <Col xs={24} sm={8}>
                 <Form.Item label="Upload Date">
                   <Input readOnly value={new Date().toLocaleDateString()}
-                    style={{ background:'#f5f5f5', cursor:'default' }} />
+                    style={{ cursor:'default' }} />
                 </Form.Item>
               </Col>
 
-              {/* Service Provider — includes "All" as first option */}
+              {/* Stakeholder — includes "All" as first option */}
               <Col xs={24} sm={8}>
                 <Form.Item
-                  label="Service Provider"
-                  name="serviceProvider"
-                  rules={[{ required:true, message:'Please select a service provider.' }]}
+                  label="Stakeholder"
+                  name="stakeholder"
+                  rules={[{ required:true, message:'Please select a stakeholder.' }]}
                   extra={
                     chosenSp === ALL_VALUE ? (
                       <Text style={{ color:'#722ed1', fontSize:12 }}>
-                        <GlobalOutlined /> This template will be used by <b>all</b> service providers
+                        <GlobalOutlined /> This template will be used by <b>all</b> stakeholders
                         that do not have their own specific template.
                       </Text>
                     ) : null
                   }
                 >
                   <Select
-                    placeholder="Select service provider…"
+                    placeholder="Select stakeholder…"
                     showSearch
                     optionFilterProp="label"
                     options={spOptions}
@@ -294,7 +294,7 @@ export default function RequirementTemplate() {
                         ? (
                           <Space>
                             <GlobalOutlined style={{ color:'#722ed1' }} />
-                            <Text strong style={{ color:'#722ed1' }}>All Service Providers</Text>
+                            <Text strong style={{ color:'#722ed1' }}>All Stakeholders</Text>
                             <Tag color="purple" style={{ fontSize:10, padding:'0 4px' }}>Global</Tag>
                           </Space>
                         )
@@ -302,7 +302,7 @@ export default function RequirementTemplate() {
                     )}
                     notFoundContent={
                       <Text type="secondary" style={{ fontSize:12 }}>
-                        No service providers registered yet.
+                        No stakeholders registered yet.
                       </Text>
                     }
                   />
@@ -413,19 +413,19 @@ export default function RequirementTemplate() {
             <Descriptions.Item label="Title">
               {selected.title || selected.file?.name || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label="Service Provider">
+            <Descriptions.Item label="Stakeholder">
               {selected.isGlobal ? (
                 <Tag color="purple" icon={<GlobalOutlined />} style={{ fontWeight:600 }}>
-                  All Service Providers (Global)
+                  All Stakeholders (Global)
                 </Tag>
               ) : (
                 <>
                   <Tag color="geekblue" style={{ fontWeight:500 }}>
-                    {selected.serviceProvider?.name || '—'}
+                    {selected.stakeholder?.name || '—'}
                   </Tag>
-                  {selected.serviceProvider?.company && (
+                  {selected.stakeholder?.company && (
                     <Text type="secondary" style={{ marginLeft:8 }}>
-                      {selected.serviceProvider.company}
+                      {selected.stakeholder.company}
                     </Text>
                   )}
                 </>

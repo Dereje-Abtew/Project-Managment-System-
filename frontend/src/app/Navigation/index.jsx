@@ -66,6 +66,8 @@ function Sidebar({ forceExpanded = false }) {
   }
   const currentUserResources = Array.isArray(authUser?.role?.resources)
     ? authUser.role.resources : [];
+  const roleName = String(authUser?.role?.name || '').toLowerCase();
+  const isServiceProviderRole = roleName.includes('stakeholder') || roleName.includes('serviceprovider');
 
   const normalizeResourceName = (name) => {
     if (name === 'User') return 'Team Member';
@@ -95,7 +97,9 @@ function Sidebar({ forceExpanded = false }) {
         if (rd.name === 'Dashboard') dashboardResource = { url: rd.url, name: normalizeResourceName(rd.name) };
         else if (rd.name === 'Report') {
           // skip adding the top-level 'Report' menu
-        } else MY_SIDEBAR_MENU.push({ url: rd.url, name: normalizeResourceName(rd.name) });
+        } else {
+          MY_SIDEBAR_MENU.push({ url: rd.url, name: normalizeResourceName(rd.name) });
+        }
       }
     }
   }

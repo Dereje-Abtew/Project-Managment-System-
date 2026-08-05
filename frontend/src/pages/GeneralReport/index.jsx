@@ -435,8 +435,8 @@ export default function GeneralReport() {
       ...getColumnSearchProps('senderName'),
     },
     {
-      title: 'Service Provider', dataIndex: 'serviceProvider', key: 'sp', width: 160,
-      ...getColumnSearchProps('serviceProvider'),
+      title: 'Stakeholder', dataIndex: 'stakeholder', key: 'sp', width: 160,
+      ...getColumnSearchProps('stakeholder'),
       render: (v) => v ? <Tag color="geekblue">{v}</Tag> : <span style={{ color: '#bbb' }}>—</span>,
     },
     {
@@ -643,7 +643,7 @@ export default function GeneralReport() {
 
     // Requirement detail rows
     const reqDetHeaders = reqSheet.addRow([
-      'Sender', 'Service Provider', 'Status', 'Enhancement?', 'Attachments', 'Submitted At', 'Approved At', 'Rejected At',
+      'Sender', 'Stakeholder', 'Status', 'Enhancement?', 'Attachments', 'Submitted At', 'Approved At', 'Rejected At',
     ]);
     reqDetHeaders.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     reqDetHeaders.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A3A2A' } };
@@ -651,7 +651,7 @@ export default function GeneralReport() {
     requirementDetails.forEach((r, i) => {
       const row = reqSheet.addRow([
         r.senderName,
-        r.serviceProvider,
+        r.stakeholder,
         (r.status || '').replace(/_/g, ' '),
         r.isEnhancement ? 'Yes' : 'No',
         r.attachmentCount,
@@ -832,7 +832,7 @@ export default function GeneralReport() {
       <h2>Requirement Details (${requirementDetails.length})</h2>
       <table>
         <thead><tr>
-          <th>#</th><th>Sender</th><th>Service Provider</th><th>Status</th>
+          <th>#</th><th>Sender</th><th>Stakeholder</th><th>Status</th>
           <th>Enhancement?</th><th>Attachments</th><th>Submitted At</th><th>Approved At</th><th>Rejected At</th>
         </tr></thead>
         <tbody>
@@ -841,7 +841,7 @@ export default function GeneralReport() {
             return `<tr class="${r.status === 'rejected' ? 'delayed-row' : ''}">
               <td>${i + 1}</td>
               <td>${r.senderName || '—'}</td>
-              <td>${r.serviceProvider || '—'}</td>
+              <td>${r.stakeholder || '—'}</td>
               <td style="color:${statusColor};font-weight:600">${(r.status || '').replace(/_/g, ' ')}</td>
               <td>${r.isEnhancement ? '✓' : '—'}</td>
               <td style="text-align:center">${r.attachmentCount}</td>

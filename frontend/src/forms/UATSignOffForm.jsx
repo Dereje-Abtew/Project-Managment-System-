@@ -68,7 +68,7 @@ const UATSignOffForm = ({ isUpdateForm = false }) => {
     }
   }, [isSuccess, result]);
 
-  // When a project is selected, auto-fill the service provider from ownerName
+  // When a project is selected, auto-fill the stakeholder from ownerName
   const handleProjectChange = (selectedId) => {
     const project = projectOptions.find((p) => p._id === selectedId);
     if (!project) return;
@@ -110,7 +110,7 @@ const UATSignOffForm = ({ isUpdateForm = false }) => {
         name="project"
         label="Project"
         rules={[{ required: true, message: 'Please select a project!' }]}
-        extra="Selecting a project automatically fills the service provider."
+        extra="Selecting a project automatically fills the stakeholder."
       >
         <Select
           showSearch
@@ -129,17 +129,16 @@ const UATSignOffForm = ({ isUpdateForm = false }) => {
       </Form.Item>
 
       {/* Hidden field — stores the SP _id set programmatically */}
-      <Form.Item name="serviceProvider" hidden rules={[{ required: true, message: 'Service provider is required. Please select a project that has a service provider assigned.' }]}>
+      <Form.Item name="serviceProvider" hidden rules={[{ required: true, message: 'Stakeholder is required. Please select a project that has a stakeholder assigned.' }]}>
         <Input />
       </Form.Item>
 
       {/* Read-only display of the auto-filled SP */}
-      <Form.Item label="Service Provider (auto-filled from project)">
+      <Form.Item label="Stakeholder (auto-filled from project)">
         <Input
           value={spDisplay || 'Will fill automatically when you select a project'}
           readOnly
           style={{
-            background: '#f5f5f5',
             cursor: 'default',
             color: spDisplay ? '#1a5c38' : '#aaa',
             fontWeight: spDisplay ? 500 : 400,

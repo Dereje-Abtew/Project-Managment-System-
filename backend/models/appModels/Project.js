@@ -19,7 +19,15 @@ const projectSchema = new mongoose.Schema({
   },
   ownerName: {
     type: mongoose.Schema.ObjectId,
-    ref: 'ServiceProvider',
+    ref: 'User',
+    autopopulate: {
+      select: 'firstName lastName email position',
+    },
+  },
+  // Legacy field for backward compatibility with existing data
+  legacyStakeholder: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Stakeholder',
     autopopulate: true,
   },
   ownerContact: {

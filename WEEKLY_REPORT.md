@@ -16,7 +16,7 @@
 This report covers the development progress of four key modules within the Project Management System (PMS):
 
 1. **General Report** — Cross-project analytics dashboard
-2. **Service Provider Management** — External owner registration and authentication
+2. **Stakeholder Management** — External owner registration and authentication
 3. **Send Requirement** — Requirement submission workflow
 4. **Approve Requirement** — Requirement review and approval workflow
 
@@ -96,17 +96,17 @@ The Excel export filename follows the pattern: `General-Report-YYYYMMDD-HHmm.xls
 
 ---
 
-## 3. Service Provider Management Module
+## 3. Stakeholder Management Module
 
 ### 3.1 Overview
 
-Service Providers are external companies or individuals who own projects registered in the system. They are managed separately from internal users and have their own registration, credentials, and authentication flow.
+Stakeholders are external companies or individuals who own projects registered in the system. They are managed separately from internal users and have their own registration, credentials, and authentication flow.
 
 ### 3.2 Features Delivered
 
 **Registration & Profile Management**
 
-Each service provider record stores:
+Each stakeholder record stores:
 
 | Field | Description |
 |-------|-------------|
@@ -122,18 +122,18 @@ Each service provider record stores:
 
 | Page | Route | Purpose |
 |------|-------|---------|
-| Service Provider List | `/serviceprovider` | View and search all registered providers |
-| Create | `/serviceprovider/create` | Register a new service provider |
-| View Profile | `/serviceprovider/read/:id` | View provider details |
-| Edit | `/serviceprovider/update/:id` | Update provider information |
+| Stakeholder List | `/stakeholder` | View and search all registered stakeholders |
+| Create | `/stakeholder/create` | Register a new stakeholder |
+| View Profile | `/stakeholder/read/:id` | View stakeholder details |
+| Edit | `/stakeholder/update/:id` | Update stakeholder information |
 
 **Separate Authentication**
 
-Service providers authenticate through a dedicated endpoint distinct from internal user login. On successful login, a JSON Web Token (JWT) is issued valid for 7 days. This keeps their access isolated from internal staff accounts.
+Stakeholders authenticate through a dedicated endpoint distinct from internal user login. On successful login, a JSON Web Token (JWT) is issued valid for 7 days. This keeps their access isolated from internal staff accounts.
 
 **Project Linkage**
 
-When a project is created, its `Owner Name` field links directly to a registered service provider. This establishes the formal relationship between the external owner and the project.
+When a project is created, its `Owner Name` field links directly to a registered stakeholder. This establishes the formal relationship between the external owner and the project.
 
 ### 3.3 Status
 
@@ -348,7 +348,7 @@ The detail modal provides a complete picture of any requirement:
 | Module | Status | Key Deliverables |
 |--------|--------|-----------------|
 | General Report | ✅ Complete | KPI cards, 4 chart types, task detail table, Excel + PDF export |
-| Service Provider | ✅ Complete | CRUD pages, separate login, project linkage |
+| Stakeholder | ✅ Complete | CRUD pages, separate login, project linkage |
 | Send Requirement | ✅ Complete | Submission form, file validation, My Submissions table, Enhancement flow |
 | Approve Requirement | ✅ Complete | Approve / Reject / Reverse Approval, activity log, full detail modal |
 

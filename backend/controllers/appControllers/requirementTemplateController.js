@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const RequirementTemplate = mongoose.model('RequirementTemplate');
-const ServiceProvider     = mongoose.model('ServiceProvider');
+const Stakeholder         = mongoose.model('Stakeholder');
 const User                = mongoose.model('User');
 const Role                = mongoose.model('Role');
 const Resource            = mongoose.model('Resource');
@@ -24,11 +24,11 @@ const hasPermission = async (req, permissionName) => {
 };
 
 // ── POST /requirement-template/create ────────────────────────────────────────
-// Body: { serviceProvider: <id> | "all", title?, file: { name, url } }
+// Body: { stakeholder: <id> | "all", title?, file: { name, url } }
 //
-// When serviceProvider === "all"  →  isGlobal=true, no serviceProvider ref.
-//   The template is applied to every provider that has no specific template.
-// When serviceProvider is a valid ObjectId → specific to that provider only.
+// When stakeholder === "all"  →  isGlobal=true, no stakeholder ref.
+//   The template is applied to every stakeholder that has no specific template.
+// When stakeholder is a valid ObjectId → specific to that stakeholder only.
 exports.create = async (req, res) => {
   try {
     if (!(await hasPermission(req, 'create'))) {
@@ -38,10 +38,10 @@ exports.create = async (req, res) => {
       });
     }
 
-    const { serviceProvider, title, file } = req.body;
+    const { stakeholder, title, file } = req.body;
 
-    if (!serviceProvider) {
-      return res.status(400).json({ success: false, message: 'Service provider is required.' });
+    if (!stakeholder) {
+      return res.status(400).json({ success: false, message: 'Stakeholder is required.' });
     }
 
     if (!file || !file.name || !file.url) {
@@ -57,13 +57,13 @@ exports.create = async (req, res) => {
       });
     }
 
-    const isGlobal = serviceProvider === 'all';
+    const isGlobal = stakeholder === 'all';
 
-    // When specific provider — verify it exists
+    // When specific stakeholder — verify it exists
     if (!isGlobal) {
-      const spExists = await ServiceProvider.findOne({ _id: serviceProvider, removed: false });
+      const spExists = await Stakeholder.findOne({ _id: stakeholder, removed: false });
       if (!spExists) {
-        return res.status(404).json({ success: false, message: 'Service provider not found.' });
+        return res.status(404).json({ success: false, message: 'Stakeholder not found.' });
       }
     }
 
@@ -75,7 +75,7 @@ exports.create = async (req, res) => {
       isGlobal,
     };
 
-    if (!isGlobal) payload.serviceProvider = serviceProvider;
+    if (!isGlobal) payload.stakeholder = stakeholder;
 
     const template = await new RequirementTemplate(payload).save();
 
@@ -83,7 +83,7 @@ exports.create = async (req, res) => {
       success: true,
       result: template,
       message: isGlobal
-        ? 'Global template uploaded — applies to all service providers.'
+        ? 'Global template uploaded — applies to all stakeholders.'
         : 'Requirement template uploaded successfully.',
     });
   } catch (err) {
@@ -102,18 +102,18 @@ exports.list = async (req, res) => {
 };
 
 // ── GET /requirement-template/list-by-provider/:providerId ───────────────────
-// Returns templates relevant to a specific provider:
-//   1. Provider-specific templates for that provider
+// Returns templates relevant to a specific stakeholder:
+//   1. Stakeholder-specific templates for that stakeholder
 //   2. Global templates (isGlobal=true) — used as fallback
 exports.listByProvider = async (req, res) => {
   try {
     const { providerId } = req.params;
     if (!providerId) {
-      return res.status(400).json({ success: false, message: 'Service provider ID is required.' });
+      return res.status(400).json({ success: false, message: 'Stakeholder ID is required.' });
     }
     const result = await RequirementTemplate.find({
       removed: false,
-      $or: [{ serviceProvider: providerId }, { isGlobal: true }],
+      $or: [{ stakeholder: providerId }, { isGlobal: true }],
     }).sort({ isGlobal: 1, created: -1 }); // specific first (isGlobal=false sorts before true)
 
     return res.status(200).json({ success: true, result, message: 'Templates fetched.' });
