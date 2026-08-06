@@ -72,9 +72,26 @@ export default function RequirementTemplate() {
 
   const loadProviders = useCallback(async () => {
     try {
-      const res = await request.list({ entity: 'stakeholder' });
-      setProviders(Array.isArray(res?.result) ? res.result : []);
-    } catch { /* non-fatal */ }
+      // Fetch users with "Stakeholder" position
+      const res = await request.filter({ 
+        entity: 'user',
+        options: { 
+          filter: 'position',
+          equal: 'Stakeholder'
+        }
+      });
+      // Transform users to look like stakeholders
+      const users = Array.isArray(res?.result) ? res.result : [];
+      const transformed = users.map(u => ({
+        _id: u._id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+        company: u.company || '',
+      }));
+      setProviders(transformed);
+    } catch (err) { 
+      console.error('Error loading stakeholder users:', err);
+      /* non-fatal - just won't show providers */ 
+    }
   }, []);
 
   useEffect(() => { loadTemplates(); loadProviders(); }, [loadTemplates, loadProviders]);
@@ -287,19 +304,17 @@ export default function RequirementTemplate() {
                     placeholder="Select stakeholder…"
                     showSearch
                     optionFilterProp="label"
-                    options={spOptions}
+                    options={spOptions.map(opt => ({
+                      ...opt,
+                      label: opt.value === ALL_VALUE ? (
+                        <Space>
+                          <GlobalOutlined style={{ color:'#722ed1' }} />
+                          <Text strong style={{ color:'#722ed1' }}>All Stakeholders</Text>
+                          <Tag color="purple" style={{ fontSize:10, padding:'0 4px' }}>Global</Tag>
+                        </Space>
+                      ) : opt.label
+                    }))}
                     onChange={v => setChosenSp(v)}
-                    optionRender={option => (
-                      option.value === ALL_VALUE
-                        ? (
-                          <Space>
-                            <GlobalOutlined style={{ color:'#722ed1' }} />
-                            <Text strong style={{ color:'#722ed1' }}>All Stakeholders</Text>
-                            <Tag color="purple" style={{ fontSize:10, padding:'0 4px' }}>Global</Tag>
-                          </Space>
-                        )
-                        : <span>{option.label}</span>
-                    )}
                     notFoundContent={
                       <Text type="secondary" style={{ fontSize:12 }}>
                         No stakeholders registered yet.

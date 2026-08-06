@@ -248,7 +248,13 @@ export default function SendRequirement() {
     try {
       // Try to get global templates directly via a known provider
       // Use listByProvider which has no permission gate
-      const provRes = await request.list({ entity: 'stakeholder' });
+      const provRes = await request.filter({ 
+        entity: 'user',
+        options: { 
+          filter: 'position',
+          equal: 'Stakeholder'
+        }
+      });
       const provList = Array.isArray(provRes?.result) ? provRes.result : [];
 
       if (provList.length === 0) return;
@@ -279,8 +285,21 @@ export default function SendRequirement() {
 
   const loadProviders = async () => {
     try {
-      const res = await request.list({ entity: 'stakeholder' });
-      setProviders(Array.isArray(res?.result) ? res.result : []);
+      const res = await request.filter({ 
+        entity: 'user',
+        options: { 
+          filter: 'position',
+          equal: 'Stakeholder'
+        }
+      });
+      const users = Array.isArray(res?.result) ? res.result : [];
+      // Transform users to look like stakeholders
+      const transformed = users.map(u => ({
+        _id: u._id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+        company: u.company || '',
+      }));
+      setProviders(transformed);
     } catch { /* non-fatal */ }
   };
 

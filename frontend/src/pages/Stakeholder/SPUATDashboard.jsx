@@ -204,19 +204,32 @@ export default function SPUATDashboard() {
     const isPending = record.responseStatus !== 'submitted';
     
     const detailCols = [
-      { title: 'NO.', dataIndex: 'no', key: 'no', width: 80, align: 'center', render: (t) => <b>{t}</b> },
-      { title: 'FEATURE / CAPABILITY', dataIndex: 'feature', key: 'feature', width: 250 },
       { 
-        title: 'BUSINESS VALIDATION CONFIRMED', 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>NO.</span>, 
+        dataIndex: 'no', 
+        key: 'no', 
+        width: 80, 
+        align: 'center', 
+        fixed: 'left',
+        render: (t) => <b style={{ fontSize: 14 }}>{t}</b> 
+      },
+      { 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>FEATURE / CAPABILITY</span>, 
+        dataIndex: 'feature', 
+        key: 'feature', 
+        width: 300,
+      },
+      { 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>BUSINESS VALIDATION CONFIRMED</span>, 
         dataIndex: 'businessValidationConfirmed', 
         key: 'bvc', 
         width: 300,
-        render: (val) => val || '—',
+        render: (val) => <span style={{ fontSize: 13 }}>{val || '—'}</span>,
       },
       { 
-        title: 'PASS', 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>PASS</span>, 
         key: 'pass', 
-        width: 100, 
+        width: 120, 
         align: 'center',
         render: (_, f) => {
           const pass = rowValues[f._id]?.pass || false;
@@ -236,22 +249,23 @@ export default function SPUATDashboard() {
                 background: pass ? '#1a5c38' : undefined, 
                 borderColor: pass ? '#1a5c38' : undefined, 
                 color: pass ? '#fff' : undefined,
-                width: 60
+                width: 70,
+                fontSize: 12
               }}
               onClick={() => { 
                 updateRow(f._id, 'pass', true); 
                 updateRow(f._id, 'fail', false); 
               }}
             >
-              {pass ? <span className="material-symbols-outlined" style={{ fontSize: 16 }}>check_circle</span> : 'Pass'}
+              {pass ? <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span> : 'Pass'}
             </Button>
           );
         }
       },
       { 
-        title: 'FAIL', 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>FAIL</span>, 
         key: 'fail', 
-        width: 100, 
+        width: 120, 
         align: 'center',
         render: (_, f) => {
           const fail = rowValues[f._id]?.fail || false;
@@ -268,32 +282,33 @@ export default function SPUATDashboard() {
               type={fail ? 'primary' : 'default'}
               size="small"
               disabled={!canRespond}
-              style={{ width: 60 }}
+              style={{ width: 70, fontSize: 12 }}
               onClick={() => { 
                 updateRow(f._id, 'fail', true); 
                 updateRow(f._id, 'pass', false); 
               }}
             >
-              {fail ? <span className="material-symbols-outlined" style={{ fontSize: 16 }}>cancel</span> : 'Fail'}
+              {fail ? <span className="material-symbols-outlined" style={{ fontSize: 14 }}>cancel</span> : 'Fail'}
             </Button>
           );
         }
       },
       { 
-        title: 'REMARKS', 
+        title: <span style={{ fontSize: 12, fontWeight: 600 }}>REMARKS</span>, 
         key: 'remark', 
-        width: 300,
+        width: 400,
         render: (_, f) => {
           if (!isPending) {
-            return <Text>{f.remark || '—'}</Text>;
+            return <Text style={{ fontSize: 13 }}>{f.remark || '—'}</Text>;
           }
           return (
             <Input.TextArea
-              rows={1}
+              rows={2}
               placeholder="Remark (required for 'Fail')"
               value={rowValues[f._id]?.remark || ''}
               disabled={!canRespond}
               onChange={(e) => updateRow(f._id, 'remark', e.target.value)}
+              style={{ fontSize: 13 }}
             />
           );
         }
@@ -301,16 +316,52 @@ export default function SPUATDashboard() {
     ];
     
     return (
-      <div style={{ margin: '10px 30px', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
-        <Table
-          columns={detailCols}
-          dataSource={record.features || []}
-          pagination={false}
-          size="small"
-          rowKey="_id"
-          bordered
-          scroll={{ x: 1400 }}
-        />
+      <>
+        <style dangerouslySetInnerHTML={{__html: `
+          .uat-detail-scroll-${record._id}::-webkit-scrollbar {
+            height: 14px;
+          }
+          .uat-detail-scroll-${record._id}::-webkit-scrollbar-track {
+            background: #e8f5e9;
+            border-radius: 7px;
+          }
+          .uat-detail-scroll-${record._id}::-webkit-scrollbar-thumb {
+            background: #1a5c38;
+            border-radius: 7px;
+            border: 2px solid #e8f5e9;
+          }
+          .uat-detail-scroll-${record._id}::-webkit-scrollbar-thumb:hover {
+            background: #15502f;
+          }
+        `}} />
+        <div style={{ 
+          margin: '10px 30px', 
+          background: '#fff', 
+          border: '1px solid #d9d9d9', 
+          borderRadius: 8, 
+          padding: 16,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+        }}>
+          {/* Horizontal Scrollable Container for Detail Table */}
+          <div 
+            className={`uat-detail-scroll-${record._id}`}
+            style={{ 
+              overflowX: 'auto',
+              width: '100%',
+              marginBottom: 16
+            }}
+          >
+            <Table
+              columns={detailCols}
+              dataSource={record.features || []}
+              pagination={false}
+              size="middle"
+              rowKey="_id"
+              bordered
+              scroll={{ x: 1400 }}
+              style={{ minWidth: 1400 }}
+            />
+          </div>
         
         {/* Overall Remark Section */}
         {isPending ? (
@@ -380,6 +431,7 @@ export default function SPUATDashboard() {
           </div>
         )}
       </div>
+      </>
     );
   };
 
