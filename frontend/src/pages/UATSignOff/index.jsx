@@ -278,23 +278,26 @@ export default function UATSignOff() {
   // ── Render Expanded Row (Detail Table) ────────────────────────────────────
   const expandedRowRender = (record) => {
     const detailCols = [
-      { title: 'No.', dataIndex: 'no', key: 'no', width: 80, align: 'center', render: (t) => <b>{t}</b> },
-      { title: 'Feature / Capability', dataIndex: 'feature', key: 'feature', width: 250 },
-      { title: 'Business Validation Confirmed', dataIndex: 'businessValidationConfirmed', key: 'bvc', width: 300 },
-      { title: 'Pass', dataIndex: 'pass', key: 'pass', width: 100, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#4caf50', verticalAlign: 'middle', fontSize: 20 }}>check_circle</span> : <span style={{ color: '#ccc' }}>—</span> },
-      { title: 'Fail', dataIndex: 'fail', key: 'fail', width: 100, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#f44336', verticalAlign: 'middle', fontSize: 20 }}>cancel</span> : <span style={{ color: '#ccc' }}>—</span> },
-      { title: 'Remarks', dataIndex: 'remark', key: 'remark', width: 300, render: (t) => t || <Text type="secondary">—</Text> },
+      { title: 'No.', dataIndex: 'no', key: 'no', width: 70, align: 'center', render: (t) => <b>{t}</b> },
+      { title: 'Feature / Capability', dataIndex: 'feature', key: 'feature', width: 200, ellipsis: false },
+      { title: 'Business Validation Confirmed', dataIndex: 'businessValidationConfirmed', key: 'bvc', width: 250, ellipsis: false },
+      { title: 'Pass', dataIndex: 'pass', key: 'pass', width: 80, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#4caf50', verticalAlign: 'middle', fontSize: 20 }}>check_circle</span> : <span style={{ color: '#ccc' }}>—</span> },
+      { title: 'Fail', dataIndex: 'fail', key: 'fail', width: 80, align: 'center', render: (val) => val ? <span className="material-symbols-outlined" style={{ color: '#f44336', verticalAlign: 'middle', fontSize: 20 }}>cancel</span> : <span style={{ color: '#ccc' }}>—</span> },
+      { title: 'Remarks', dataIndex: 'remark', key: 'remark', ellipsis: false, render: (t) => t || <Text type="secondary">—</Text> },
     ];
     return (
-      <div style={{ margin: '10px 30px', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16, overflowX: 'auto' }}>
-        <Table
-          columns={detailCols}
-          dataSource={record.features || []}
-          pagination={false}
-          size="small"
-          rowKey="_id"
-          scroll={{ x: 'max-content' }}
-        />
+      <div style={{ margin: '10px 30px', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 8, padding: 16 }}>
+        <div className="uat-detail-scroll" style={{ overflowX: 'auto', width: '100%' }}>
+          <Table
+            columns={detailCols}
+            dataSource={record.features || []}
+            pagination={false}
+            size="small"
+            rowKey="_id"
+            scroll={{ x: 'max-content' }}
+            style={{ minWidth: '800px' }}
+          />
+        </div>
         {(record.reviewHistory && record.reviewHistory.length > 0) && (
           <div style={{ marginTop: 16, borderTop: '1px solid #f0f0f0', paddingTop: 16 }}>
             <Text strong style={{ display: 'block', marginBottom: 8 }}>Review History</Text>
@@ -581,26 +584,29 @@ export default function UATSignOff() {
         </Space>
       </div>
 
-      <Card bodyStyle={{ padding: 0 }} style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-        <Table
-          dataSource={filteredRecords}
-          columns={columns}
-          rowKey="_id"
-          loading={loading}
-          size="middle"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          className="master-material-table"
-          expandable={{
-            expandedRowRender,
-            expandIcon: ({ expanded, onExpand, record }) =>
-              expanded ? (
-                <span className="material-symbols-outlined" onClick={e => onExpand(record, e)} style={{ color: '#5f6368', cursor: 'pointer', fontSize: 22, verticalAlign: 'middle', transition: 'all 0.2s' }}>keyboard_arrow_down</span>
-              ) : (
-                <span className="material-symbols-outlined" onClick={e => onExpand(record, e)} style={{ color: '#5f6368', cursor: 'pointer', fontSize: 22, verticalAlign: 'middle', transition: 'all 0.2s' }}>keyboard_arrow_right</span>
-              )
-          }}
-          rowClassName={(_, i) => (i % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
-        />
+      <Card bodyStyle={{ padding: 0 }} style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', overflow: 'visible' }}>
+        <div className="uat-main-table-scroll" style={{ overflowX: 'auto', width: '100%' }}>
+          <Table
+            dataSource={filteredRecords}
+            columns={columns}
+            rowKey="_id"
+            loading={loading}
+            size="middle"
+            pagination={{ pageSize: 10, showSizeChanger: true }}
+            className="master-material-table"
+            scroll={{ x: 'max-content' }}
+            expandable={{
+              expandedRowRender,
+              expandIcon: ({ expanded, onExpand, record }) =>
+                expanded ? (
+                  <span className="material-symbols-outlined" onClick={e => onExpand(record, e)} style={{ color: '#5f6368', cursor: 'pointer', fontSize: 22, verticalAlign: 'middle', transition: 'all 0.2s' }}>keyboard_arrow_down</span>
+                ) : (
+                  <span className="material-symbols-outlined" onClick={e => onExpand(record, e)} style={{ color: '#5f6368', cursor: 'pointer', fontSize: 22, verticalAlign: 'middle', transition: 'all 0.2s' }}>keyboard_arrow_right</span>
+                )
+            }}
+            rowClassName={(_, i) => (i % 2 === 0 ? 'table-row-light' : 'table-row-dark')}
+          />
+        </div>
       </Card>
 
       {/* ── Feature List Popup Modal ─────────────────────────────────────── */}
@@ -756,6 +762,51 @@ export default function UATSignOff() {
           font-size: 0.75rem;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+        }
+        /* Ensure table cells don't truncate content */
+        .ant-table-cell {
+          word-wrap: break-word;
+          word-break: break-word;
+        }
+        /* Make sure expanded row content is visible */
+        .ant-table-expanded-row .ant-table {
+          width: 100%;
+        }
+        .ant-table-expanded-row .ant-table-tbody > tr > td {
+          white-space: normal !important;
+          word-wrap: break-word !important;
+        }
+        
+        /* Ultra Minimal Elegant Scrollbar for Main Table */
+        .uat-main-table-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .uat-main-table-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .uat-main-table-scroll::-webkit-scrollbar-thumb {
+          background: rgba(26, 92, 56, 0.4);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        .uat-main-table-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(26, 92, 56, 0.7);
+        }
+        
+        /* Ultra Minimal Elegant Scrollbar for Detail Tables */
+        .uat-detail-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .uat-detail-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .uat-detail-scroll::-webkit-scrollbar-thumb {
+          background: rgba(26, 92, 56, 0.4);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        .uat-detail-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(26, 92, 56, 0.7);
         }
       `}</style>
     </div>

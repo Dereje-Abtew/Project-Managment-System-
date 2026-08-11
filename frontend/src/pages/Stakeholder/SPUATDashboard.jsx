@@ -208,28 +208,29 @@ export default function SPUATDashboard() {
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>NO.</span>, 
         dataIndex: 'no', 
         key: 'no', 
-        width: 80, 
-        align: 'center', 
-        fixed: 'left',
+        width: 70, 
+        align: 'center',
         render: (t) => <b style={{ fontSize: 14 }}>{t}</b> 
       },
       { 
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>FEATURE / CAPABILITY</span>, 
         dataIndex: 'feature', 
         key: 'feature', 
-        width: 300,
+        width: 200,
+        ellipsis: false,
       },
       { 
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>BUSINESS VALIDATION CONFIRMED</span>, 
         dataIndex: 'businessValidationConfirmed', 
         key: 'bvc', 
-        width: 300,
+        width: 250,
+        ellipsis: false,
         render: (val) => <span style={{ fontSize: 13 }}>{val || '—'}</span>,
       },
       { 
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>PASS</span>, 
         key: 'pass', 
-        width: 120, 
+        width: 100, 
         align: 'center',
         render: (_, f) => {
           const pass = rowValues[f._id]?.pass || false;
@@ -265,7 +266,7 @@ export default function SPUATDashboard() {
       { 
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>FAIL</span>, 
         key: 'fail', 
-        width: 120, 
+        width: 100, 
         align: 'center',
         render: (_, f) => {
           const fail = rowValues[f._id]?.fail || false;
@@ -295,8 +296,8 @@ export default function SPUATDashboard() {
       },
       { 
         title: <span style={{ fontSize: 12, fontWeight: 600 }}>REMARKS</span>, 
-        key: 'remark', 
-        width: 400,
+        key: 'remark',
+        ellipsis: false,
         render: (_, f) => {
           if (!isPending) {
             return <Text style={{ fontSize: 13 }}>{f.remark || '—'}</Text>;
@@ -316,52 +317,34 @@ export default function SPUATDashboard() {
     ];
     
     return (
-      <>
-        <style dangerouslySetInnerHTML={{__html: `
-          .uat-detail-scroll-${record._id}::-webkit-scrollbar {
-            height: 14px;
-          }
-          .uat-detail-scroll-${record._id}::-webkit-scrollbar-track {
-            background: #e8f5e9;
-            border-radius: 7px;
-          }
-          .uat-detail-scroll-${record._id}::-webkit-scrollbar-thumb {
-            background: #1a5c38;
-            border-radius: 7px;
-            border: 2px solid #e8f5e9;
-          }
-          .uat-detail-scroll-${record._id}::-webkit-scrollbar-thumb:hover {
-            background: #15502f;
-          }
-        `}} />
-        <div style={{ 
-          margin: '10px 30px', 
-          background: '#fff', 
-          border: '1px solid #d9d9d9', 
-          borderRadius: 8, 
-          padding: 16,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
-        }}>
-          {/* Horizontal Scrollable Container for Detail Table */}
-          <div 
-            className={`uat-detail-scroll-${record._id}`}
-            style={{ 
-              overflowX: 'auto',
-              width: '100%',
-              marginBottom: 16
-            }}
-          >
-            <Table
-              columns={detailCols}
-              dataSource={record.features || []}
-              pagination={false}
-              size="middle"
-              rowKey="_id"
-              bordered
-              scroll={{ x: 1400 }}
-              style={{ minWidth: 1400 }}
-            />
-          </div>
+      <div style={{ 
+        margin: '10px 30px', 
+        background: '#fff', 
+        border: '1px solid #d9d9d9', 
+        borderRadius: 8, 
+        padding: 16,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+      }}>
+        {/* Horizontal Scrollable Container for Detail Table */}
+        <div 
+          className="sp-uat-detail-scroll"
+          style={{ 
+            overflowX: 'auto',
+            width: '100%',
+            marginBottom: 16
+          }}
+        >
+          <Table
+            columns={detailCols}
+            dataSource={record.features || []}
+            pagination={false}
+            size="middle"
+            rowKey="_id"
+            bordered
+            scroll={{ x: 'max-content' }}
+            style={{ minWidth: '800px' }}
+          />
+        </div>
         
         {/* Overall Remark Section */}
         {isPending ? (
@@ -431,7 +414,6 @@ export default function SPUATDashboard() {
           </div>
         )}
       </div>
-      </>
     );
   };
 
@@ -555,7 +537,7 @@ export default function SPUATDashboard() {
 
       {/* ── Main UAT Table Card ──────────────────────────────────────────── */}
       <Card
-        style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', overflow: 'hidden' }}
+        style={{ borderRadius: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.07)', overflow: 'visible' }}
         bodyStyle={{ padding: 0 }}
       >
         {/* Table Header with Search */}
@@ -598,66 +580,69 @@ export default function SPUATDashboard() {
         </div>
 
         {/* Table */}
-        <Table
-          dataSource={filteredRecords}
-          columns={columns}
-          rowKey="_id"
-          loading={loading}
-          size="middle"
-          pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Total ${total} records` }}
-          expandable={{
-            expandedRowRender,
-            expandIcon: ({ expanded, onExpand, record }) =>
-              expanded ? (
-                <span 
-                  className="material-symbols-outlined" 
-                  onClick={e => onExpand(record, e)} 
-                  style={{ 
-                    color: '#5f6368', 
-                    cursor: 'pointer', 
-                    fontSize: 22, 
-                    verticalAlign: 'middle', 
-                    transition: 'all 0.2s' 
-                  }}
-                >
-                  keyboard_arrow_down
-                </span>
-              ) : (
-                <span 
-                  className="material-symbols-outlined" 
-                  onClick={e => onExpand(record, e)} 
-                  style={{ 
-                    color: '#5f6368', 
-                    cursor: 'pointer', 
-                    fontSize: 22, 
-                    verticalAlign: 'middle', 
-                    transition: 'all 0.2s' 
-                  }}
-                >
-                  keyboard_arrow_right
-                </span>
-              ),
-          }}
-          rowClassName={(record, index) => {
-            const isPending = record.responseStatus !== 'submitted';
-            const baseClass = index % 2 === 0 ? 'table-row-light' : 'table-row-dark';
-            return `${baseClass} ${isPending ? 'row-pending' : 'row-responded'}`;
-          }}
-          locale={{
-            emptyText: (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 80, color: '#ddd' }}>
-                  inventory_2
-                </span>
-                <div style={{ marginTop: 16, fontSize: 16, color: '#999' }}>
-                  {isStakeholder 
-                    ? 'No UAT sign-offs assigned to you yet.' 
-                    : 'No UAT sign-offs found.'}
+        <div className="sp-uat-main-table-scroll" style={{ overflowX: 'auto', width: '100%' }}>
+          <Table
+            dataSource={filteredRecords}
+            columns={columns}
+            rowKey="_id"
+            loading={loading}
+            size="middle"
+            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `Total ${total} records` }}
+            scroll={{ x: 'max-content' }}
+            expandable={{
+              expandedRowRender,
+              expandIcon: ({ expanded, onExpand, record }) =>
+                expanded ? (
+                  <span 
+                    className="material-symbols-outlined" 
+                    onClick={e => onExpand(record, e)} 
+                    style={{ 
+                      color: '#5f6368', 
+                      cursor: 'pointer', 
+                      fontSize: 22, 
+                      verticalAlign: 'middle', 
+                      transition: 'all 0.2s' 
+                    }}
+                  >
+                    keyboard_arrow_down
+                  </span>
+                ) : (
+                  <span 
+                    className="material-symbols-outlined" 
+                    onClick={e => onExpand(record, e)} 
+                    style={{ 
+                      color: '#5f6368', 
+                      cursor: 'pointer', 
+                      fontSize: 22, 
+                      verticalAlign: 'middle', 
+                      transition: 'all 0.2s' 
+                    }}
+                  >
+                    keyboard_arrow_right
+                  </span>
+                ),
+            }}
+            rowClassName={(record, index) => {
+              const isPending = record.responseStatus !== 'submitted';
+              const baseClass = index % 2 === 0 ? 'table-row-light' : 'table-row-dark';
+              return `${baseClass} ${isPending ? 'row-pending' : 'row-responded'}`;
+            }}
+            locale={{
+              emptyText: (
+                <div style={{ textAlign: 'center', padding: 60 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 80, color: '#ddd' }}>
+                    inventory_2
+                  </span>
+                  <div style={{ marginTop: 16, fontSize: 16, color: '#999' }}>
+                    {isStakeholder 
+                      ? 'No UAT sign-offs assigned to you yet.' 
+                      : 'No UAT sign-offs found.'}
+                  </div>
                 </div>
-              </div>
-            )
-          }}
-        />
+              )
+            }}
+          />
+        </div>
       </Card>
 
       {/* Add custom CSS for row highlighting */}
@@ -671,6 +656,53 @@ export default function SPUATDashboard() {
         .table-row-light:hover,
         .table-row-dark:hover {
           background-color: #e6f7ff !important;
+        }
+        
+        /* Ultra Minimal Elegant Scrollbar for Main Table */
+        .sp-uat-main-table-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .sp-uat-main-table-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sp-uat-main-table-scroll::-webkit-scrollbar-thumb {
+          background: rgba(26, 92, 56, 0.4);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        .sp-uat-main-table-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(26, 92, 56, 0.7);
+        }
+        
+        /* Ultra Minimal Elegant Scrollbar for Detail Tables */
+        .sp-uat-detail-scroll::-webkit-scrollbar {
+          height: 6px;
+        }
+        .sp-uat-detail-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .sp-uat-detail-scroll::-webkit-scrollbar-thumb {
+          background: rgba(26, 92, 56, 0.4);
+          border-radius: 3px;
+          transition: background 0.3s ease;
+        }
+        .sp-uat-detail-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(26, 92, 56, 0.7);
+        }
+        
+        /* Ensure table cells don't truncate content */
+        .ant-table-cell {
+          word-wrap: break-word;
+          word-break: break-word;
+        }
+        
+        /* Make sure expanded row content is visible */
+        .ant-table-expanded-row .ant-table {
+          width: 100%;
+        }
+        .ant-table-expanded-row .ant-table-tbody > tr > td {
+          white-space: normal !important;
+          word-wrap: break-word !important;
         }
       `}</style>
     </div>
