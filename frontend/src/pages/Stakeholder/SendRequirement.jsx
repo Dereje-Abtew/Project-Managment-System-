@@ -211,14 +211,18 @@ export default function SendRequirement() {
   const loadTemplates = async () => {
     try {
       const res = await request.list({ entity: 'requirement-template' });
+      console.log('[SendRequirement] loadTemplates response:', res);
+      
       if (Array.isArray(res?.result) && res.result.length > 0) {
         const map = {};
         let globalTemplate = null;
 
         // Sort: newest first (backend already does this, but be safe)
         const sorted = [...res.result].sort((a, b) => new Date(b.created) - new Date(a.created));
+        console.log(`[SendRequirement] Processing ${sorted.length} templates`);
 
         for (const t of sorted) {
+          console.log(`[SendRequirement] Template: ${t.title || t.file?.name}, isGlobal=${t.isGlobal}, stakeholder=${t.stakeholder?._id || t.stakeholder || 'none'}`);
           if (t.isGlobal) {
             if (!globalTemplate) globalTemplate = t;  // pick latest global
           } else {
@@ -227,14 +231,22 @@ export default function SendRequirement() {
           }
         }
 
-        if (globalTemplate) map['__global__'] = globalTemplate;
+        if (globalTemplate) {
+          console.log('[SendRequirement] Found global template:', globalTemplate.title || globalTemplate.file?.name);
+          map['__global__'] = globalTemplate;
+        } else {
+          console.warn('[SendRequirement] No global template found');
+        }
+        console.log('[SendRequirement] Template map keys:', Object.keys(map));
         setTemplateMap(map);
       } else {
+        console.warn('[SendRequirement] No result array in response or empty, falling back to loadGlobalTemplate');
         // Fallback: fetch global templates via the public listByProvider endpoint
         // (no permission check) using a dummy call to get global templates
         await loadGlobalTemplate();
       }
-    } catch {
+    } catch (error) {
+      console.error('[SendRequirement] loadTemplates error:', error);
       // If list is forbidden (e.g. SP role has no template read permission),
       // still try to load the global/latest template
       await loadGlobalTemplate();
@@ -246,6 +258,7 @@ export default function SendRequirement() {
   // We call it with the first available provider if any, otherwise skip.
   const loadGlobalTemplate = async () => {
     try {
+      console.log('[SendRequirement] loadGlobalTemplate: Fetching stakeholder users...');
       // Try to get global templates directly via a known provider
       // Use listByProvider which has no permission gate
       const provRes = await request.filter({ 
@@ -256,20 +269,28 @@ export default function SendRequirement() {
         }
       });
       const provList = Array.isArray(provRes?.result) ? provRes.result : [];
+      console.log(`[SendRequirement] loadGlobalTemplate: Found ${provList.length} stakeholder users`);
 
-      if (provList.length === 0) return;
+      if (provList.length === 0) {
+        console.warn('[SendRequirement] loadGlobalTemplate: No stakeholder users found');
+        return;
+      }
 
       // Fetch templates for the first provider — this returns both specific + global
+      console.log(`[SendRequirement] loadGlobalTemplate: Fetching templates for provider ${provList[0]._id}`);
       const tmplRes = await request.get({
         entity: `requirement-template/list-by-provider/${provList[0]._id}`,
       });
+      console.log('[SendRequirement] loadGlobalTemplate response:', tmplRes);
 
       if (Array.isArray(tmplRes?.result)) {
         const map = {};
         let globalTemplate = null;
         const sorted = [...tmplRes.result].sort((a, b) => new Date(b.created) - new Date(a.created));
+        console.log(`[SendRequirement] loadGlobalTemplate: Processing ${sorted.length} templates`);
 
         for (const t of sorted) {
+          console.log(`[SendRequirement] loadGlobalTemplate: Template ${t.title || t.file?.name}, isGlobal=${t.isGlobal}`);
           if (t.isGlobal) {
             if (!globalTemplate) globalTemplate = t;
           } else {
@@ -277,10 +298,19 @@ export default function SendRequirement() {
             if (spId && !map[spId]) map[spId] = t;
           }
         }
-        if (globalTemplate) map['__global__'] = globalTemplate;
+        if (globalTemplate) {
+          console.log('[SendRequirement] loadGlobalTemplate: Found global template, adding to map');
+          map['__global__'] = globalTemplate;
+        } else {
+          console.warn('[SendRequirement] loadGlobalTemplate: No global template found');
+        }
+        console.log('[SendRequirement] loadGlobalTemplate: Final map keys:', Object.keys(map));
         setTemplateMap(map);
       }
-    } catch { /* silent */ }
+    } catch (error) {
+      console.error('[SendRequirement] loadGlobalTemplate error:', error);
+      /* silent */
+    }
   };
 
   const loadProviders = async () => {

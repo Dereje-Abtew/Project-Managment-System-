@@ -1,5 +1,5 @@
 class CookieManager {
-  static setCookie(name, value, expirationDays, sameSite = 'Strict') {
+  static setCookie(name, value, expirationDays, sameSite = 'Lax') {
     const date = new Date();
     date.setTime(date.getTime() + expirationDays * 24 * 60 * 60 * 1000);
     const expires = 'expires=' + date.toUTCString();

@@ -9,7 +9,7 @@ const User = require('@/models/coreModels/User');
 // Load environment variables
 require('dotenv').config({ path: './.env' });
 
-const DATABASE_URL = process.env.DATABASE || 'mongodb://127.0.0.1:27017/globalbank';
+const DATABASE_URL = process.env.DATABASE || 'mongodb://127.0.0.1:27017/project-management';
 
 async function run() {
   try {

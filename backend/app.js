@@ -26,8 +26,9 @@ const app = express();
 // CORS — allow local dev frontend and any configured backend origin
 const corsOptions = {
   origin: [
+    'http://localhost:7523',
     'http://localhost:3000',
-    'http://localhost:8282',
+    'http://localhost:8181',
     process.env.FRONTEND_URL,
   ].filter(Boolean),
   allowedHeaders: 'Content-Type, Authorization',

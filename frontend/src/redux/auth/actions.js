@@ -33,12 +33,23 @@ export const login =
       );
       window.localStorage.setItem(AUTH_LOCAL_STORAGE, cryptoHelper.encrypt(userInfo));
 
-      await AuthorizedRoutes(fullload, data.result);
+      // Small delay to ensure cookie is written before API calls
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      try {
+        await AuthorizedRoutes(fullload, data.result);
+      } catch (error) {
+        console.error('Error loading authorized routes:', error);
+        // Continue anyway - routes will be loaded on next navigation
+      }
+
       dispatch({
         type: actionTypes.LOGIN_SUCCESS,
         payload: data.result,
       });
-      window.location.href = '/';
+      // Use history.push instead of window.location to avoid full page reload
+      // This allows cookies to persist properly before navigation
+      history.push('/');
     } else {
       dispatch({
         type: actionTypes.FAILED_REQUEST,

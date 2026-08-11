@@ -92,11 +92,14 @@ exports.create = async (req, res) => {
 };
 
 // ── GET /requirement-template/list ───────────────────────────────────────────
+// NO permission check — allows all authenticated users (including stakeholders) to view templates
 exports.list = async (req, res) => {
   try {
     const result = await RequirementTemplate.find({ removed: false }).sort({ created: -1 });
+    console.log(`[RequirementTemplate] list: Found ${result.length} templates (including ${result.filter(t => t.isGlobal).length} global)`);
     return res.status(200).json({ success: true, result, message: 'Templates fetched successfully.' });
   } catch (err) {
+    console.error('[RequirementTemplate] list error:', err);
     return res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
   }
 };
@@ -105,6 +108,7 @@ exports.list = async (req, res) => {
 // Returns templates relevant to a specific stakeholder:
 //   1. Stakeholder-specific templates for that stakeholder
 //   2. Global templates (isGlobal=true) — used as fallback
+// NO permission check — allows all users (including stakeholders) to see available templates
 exports.listByProvider = async (req, res) => {
   try {
     const { providerId } = req.params;
@@ -116,8 +120,10 @@ exports.listByProvider = async (req, res) => {
       $or: [{ stakeholder: providerId }, { isGlobal: true }],
     }).sort({ isGlobal: 1, created: -1 }); // specific first (isGlobal=false sorts before true)
 
+    console.log(`[RequirementTemplate] listByProvider(${providerId}): Found ${result.length} templates (${result.filter(t => t.isGlobal).length} global, ${result.filter(t => !t.isGlobal).length} specific)`);
     return res.status(200).json({ success: true, result, message: 'Templates fetched.' });
   } catch (err) {
+    console.error('[RequirementTemplate] listByProvider error:', err);
     return res.status(500).json({ success: false, message: err.message || 'Internal Server Error' });
   }
 };

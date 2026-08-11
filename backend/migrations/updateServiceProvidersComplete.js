@@ -13,7 +13,7 @@ const Role = require('@/models/appModels/Role');
 
 require('dotenv').config({ path: './.env' });
 
-const DATABASE_URL = process.env.DATABASE || 'mongodb://127.0.0.1:27017/globalbank';
+const DATABASE_URL = process.env.DATABASE || 'mongodb://127.0.0.1:27017/project-management';
 
 async function run() {
   try {

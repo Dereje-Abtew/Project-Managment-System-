@@ -20,8 +20,13 @@ export async function AuthorizedRoutes(fullload, currentUser) {
   };
 
   const setResources = async () => {
-    const { result: resourceResult } = await request.get({ entity: 'resources' });
-    window.localStorage.setItem(RESOURCE_LOCAL_STORAGE, cryptoHelper.encrypt(resourceResult));
+    try {
+      const { result: resourceResult } = await request.get({ entity: 'resources' });
+      window.localStorage.setItem(RESOURCE_LOCAL_STORAGE, cryptoHelper.encrypt(resourceResult));
+    } catch (error) {
+      console.error('Failed to fetch resources:', error);
+      throw error;
+    }
   };
   const getResources = async () => {
     if (fullload) {
@@ -36,8 +41,13 @@ export async function AuthorizedRoutes(fullload, currentUser) {
   };
 
   const setPermissions = async () => {
-    const { result: permissionResult } = await request.get({ entity: 'permissions' });
-    window.localStorage.setItem(PERMISSION_LOCAL_STORAGE, cryptoHelper.encrypt(permissionResult));
+    try {
+      const { result: permissionResult } = await request.get({ entity: 'permissions' });
+      window.localStorage.setItem(PERMISSION_LOCAL_STORAGE, cryptoHelper.encrypt(permissionResult));
+    } catch (error) {
+      console.error('Failed to fetch permissions:', error);
+      throw error;
+    }
   };
 
   const getPermissions = async () => {
