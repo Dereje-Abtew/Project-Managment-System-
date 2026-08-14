@@ -12,10 +12,26 @@ if (major < 14 || (major === 14 && minor <= 0)) {
   process.exit();
 }
 
-// Connect to MongoDB
+// Connect to MongoDB without crashing the app when the database is unavailable.
 mongoose.set('strictQuery', false);
-mongoose.connect(process.env.DATABASE);
 mongoose.Promise = global.Promise;
+
+const connectMongo = async () => {
+  const databaseUrl = process.env.DATABASE || 'mongodb://127.0.0.1:27017/project-management';
+
+  try {
+    await mongoose.connect(databaseUrl, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+    });
+    console.log('✅ Connected to MongoDB');
+  } catch (error) {
+    console.warn('⚠️ MongoDB unavailable at ' + databaseUrl + '. Starting server without a database connection.');
+    console.warn('⚠️ MongoDB error: ' + (error && error.message ? error.message : error));
+  }
+};
+
+connectMongo();
 
 mongoose.connection.on('error', (err) => {
   console.error('🚫 Error → : ' + err.message);
