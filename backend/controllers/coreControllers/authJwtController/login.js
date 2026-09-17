@@ -13,7 +13,9 @@ require('dotenv').config({ path: '.env' });
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email = (req.body.email || '').trim();
+    const password = (req.body.password || '').trim();
+    console.log('Login attempt for email:', email, 'password:', password);
 
     // Validate input
     const schema = Joi.object({

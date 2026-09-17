@@ -1,5 +1,5 @@
 {
-  "proxy": "http://localhost:8181/",
+  "proxy": "http://10.10.13.85:8181/",
   "name": "globalbank-backend",
   "version": "1.0.0",
   "engines": {

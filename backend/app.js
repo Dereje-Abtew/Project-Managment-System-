@@ -25,23 +25,12 @@ const app = express();
 
 // CORS — allow local dev frontend and any configured backend origin
 const corsOptions = {
-  origin: [
-    'http://localhost:7523',
-    'http://localhost:3000',
-    'http://localhost:8181',
-    process.env.FRONTEND_URL,
-  ].filter(Boolean),
+  origin: true,
   allowedHeaders: 'Content-Type, Authorization',
   credentials: true,
 };
 
-app.use(function (req, res, next) {
-  if (req.headers.origin && req.headers.origin.includes('localhost')) {
-    cors(corsOptions)(req, res, next);
-  } else {
-    cors()(req, res, next);
-  }
-});
+app.use(cors(corsOptions));
 
 // Security headers
 app.use(helmet());

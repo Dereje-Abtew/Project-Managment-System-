@@ -247,12 +247,10 @@ async function setupApp() {
         division:   division._id,
       },
       {
-        // DIRECTOR — When a Manager/Professional logs in, this user's ID
-        // appears as directorId and directorEmail in their session.
-        // The ProjectManager selects this user as Director when creating a project.
-        firstName: 'Abebe',
+        // DIRECTOR — Can create projects, view all reports, no daily task actions.
+        firstName: 'Abel',
         lastName:  'Kebede',
-        email:     'abebe.kebede@globalbank.et',
+        email:     'abel.kebede@globalbank.et',
         plainPassword: 'Director@1234',
         phone:     '+251911000001',
         jobTitle:  'IT Director',
@@ -261,11 +259,10 @@ async function setupApp() {
         department: department._id,
       },
       {
-        // PROJECT MANAGER — Creates projects. Their ID is auto-filled as
-        // projectManager when they open the Create Project form.
-        firstName: 'Tigist',
+        // PROJECT MANAGER — Creates projects, assigns teams, monitors backlog.
+        firstName: 'Biniyam',
         lastName:  'Haile',
-        email:     'tigist.haile@globalbank.et',
+        email:     'biniyam.haile@globalbank.et',
         plainPassword: 'Manager@1234',
         phone:     '+251911000002',
         jobTitle:  'Project Manager',
@@ -274,11 +271,10 @@ async function setupApp() {
         division:   division._id,
       },
       {
-        // TEAM LEADER — When assigned as teamLeader on a project,
-        // can add tasks, assign them, and export reports.
-        firstName: 'Samuel',
+        // TEAM LEADER — Assigns tasks from backlog, moves them around.
+        firstName: 'Behabtu',
         lastName:  'Tesfaye',
-        email:     'samuel.tesfaye@globalbank.et',
+        email:     'behabtu.tesfaye@globalbank.et',
         plainPassword: 'Leader@1234',
         phone:     '+251911000003',
         jobTitle:  'Team Lead',
@@ -289,9 +285,9 @@ async function setupApp() {
       {
         // PROFESSIONAL 1 — Team member. Can drag tasks on Kanban board
         // (Backlog → Assigned → In Progress → Done).
-        firstName: 'Meron',
+        firstName: 'Ayalew',
         lastName:  'Alemu',
-        email:     'meron.alemu@globalbank.et',
+        email:     'ayalew.alemu@globalbank.et',
         plainPassword: 'Member@1234',
         phone:     '+251911000004',
         jobTitle:  'Software Developer',
@@ -301,9 +297,9 @@ async function setupApp() {
       },
       {
         // PROFESSIONAL 2 — Another team member.
-        firstName: 'Dawit',
+        firstName: 'Dereje',
         lastName:  'Girma',
-        email:     'dawit.girma@globalbank.et',
+        email:     'dereje.girma@globalbank.et',
         plainPassword: 'Member@1234',
         phone:     '+251911000005',
         jobTitle:  'Business Analyst',
@@ -314,9 +310,9 @@ async function setupApp() {
       {
         // QUALITY ASSURANCE — When assigned as qualityAssurance on a project,
         // can move tasks from Done → Completed (final approval step).
-        firstName: 'Hana',
+        firstName: 'Tesfahun',
         lastName:  'Bekele',
-        email:     'hana.bekele@globalbank.et',
+        email:     'tesfahun.bekele@globalbank.et',
         plainPassword: 'QA@1234567',
         phone:     '+251911000006',
         jobTitle:  'QA Engineer',
@@ -337,12 +333,12 @@ async function setupApp() {
     console.log('Role            Email                              Password');
     console.log('──────────────────────────────────────────────────────────');
     console.log('Admin           admin@globalbank.et                Admin@1234!');
-    console.log('Director        abebe.kebede@globalbank.et         Director@1234');
-    console.log('ProjectManager  tigist.haile@globalbank.et         Manager@1234');
-    console.log('TeamLeader      samuel.tesfaye@globalbank.et       Leader@1234');
-    console.log('Professional    meron.alemu@globalbank.et          Member@1234');
-    console.log('Professional    dawit.girma@globalbank.et          Member@1234');
-    console.log('QA              hana.bekele@globalbank.et          QA@1234567');
+    console.log('Director        abel.kebede@globalbank.et          Director@1234');
+    console.log('ProjectManager  biniyam.haile@globalbank.et        Manager@1234');
+    console.log('TeamLeader      behabtu.tesfaye@globalbank.et      Leader@1234');
+    console.log('Professional    ayalew.alemu@globalbank.et         Member@1234');
+    console.log('Professional    dereje.girma@globalbank.et         Member@1234');
+    console.log('QA              tesfahun.bekele@globalbank.et      QA@1234567');
     console.log('══════════════════════════════════════════════════════════\n');
 
     process.exit(0);
