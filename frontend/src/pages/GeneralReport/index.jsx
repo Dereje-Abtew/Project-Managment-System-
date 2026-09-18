@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Row, Col, Card, Statistic, Select, DatePicker, Button, Table,
   Tag, Progress, Spin, Empty, Tooltip, Space, Divider, Dropdown, Menu as AntMenu,
+  Avatar,
 } from 'antd';
 import {
   SearchOutlined, ReloadOutlined, DownloadOutlined,
   CheckCircleOutlined, ClockCircleOutlined, WarningOutlined,
   RiseOutlined, FallOutlined, ProjectOutlined,
-  FileExcelOutlined, FilePdfOutlined,
+  FileExcelOutlined, FilePdfOutlined, UserOutlined,
 } from '@ant-design/icons';
 import {
   Chart as ChartJS,
@@ -142,6 +143,36 @@ export default function GeneralReport() {
     if (projectSearch && !t.projectTitle?.toLowerCase().includes(projectSearch.toLowerCase())) return false;
     return true;
   });
+
+  // ── Assigned-To breakdown (derived from filteredTasks — no extra API call) ──
+  const assignedToBreakdown = useMemo(() => {
+    const map = {};
+    for (const t of filteredTasks) {
+      const key   = t.assignedTo?._id  || 'unassigned';
+      const label = t.assignedTo?.name || 'Unassigned';
+      const job   = t.assignedTo?.jobTitle || '';
+      if (!map[key]) {
+        map[key] = {
+          key,
+          name:       label,
+          jobTitle:   job,
+          total:      0,
+          completed:  0,
+          delayed:    0,
+          inprogress: 0,
+          backlog:    0,
+          onTime:     0,
+          tasks:      [],
+        };
+      }
+      const person = map[key];
+      person.total++;
+      person[t.classification === 'inprogress' ? 'inprogress' : t.classification]++;
+      if (t.classification === 'completed' && t.isOnTime) person.onTime++;
+      person.tasks.push(t);
+    }
+    return Object.values(map).sort((a, b) => b.total - a.total);
+  }, [filteredTasks]);
 
   // ── Chart: Stage distribution Doughnut ──────────────────────────────────────
   const doughnutData = summary
@@ -478,6 +509,155 @@ export default function GeneralReport() {
     },
   ];
 
+  // ── Chart: Assigned-To stacked bar ──────────────────────────────────────────
+  const assignedBarData = assignedToBreakdown.length > 0
+    ? {
+        labels: assignedToBreakdown.map((p) =>
+          p.name.length > 22 ? p.name.slice(0, 22) + '…' : p.name
+        ),
+        datasets: [
+          { label: 'Completed',   data: assignedToBreakdown.map((p) => p.completed),  backgroundColor: COLOR.completed  },
+          { label: 'Delayed',     data: assignedToBreakdown.map((p) => p.delayed),    backgroundColor: COLOR.delayed    },
+          { label: 'In Progress', data: assignedToBreakdown.map((p) => p.inprogress), backgroundColor: COLOR.inprogress },
+          { label: 'Backlog',     data: assignedToBreakdown.map((p) => p.backlog),    backgroundColor: COLOR.backlog    },
+        ],
+      }
+    : null;
+
+  const assignedBarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    indexAxis: 'y',
+    plugins: {
+      legend: { position: 'bottom' },
+      title: { display: true, text: 'Tasks per Professional (by Status)' },
+    },
+    scales: {
+      x: { stacked: true, ticks: { stepSize: 1 } },
+      y: { stacked: true },
+    },
+  };
+
+  // ── Assigned-To summary table columns ────────────────────────────────────────
+  const assignedSummaryColumns = [
+    {
+      title: '#', key: 'idx', width: 50, align: 'center',
+      render: (_, __, i) => <span style={{ color: '#888' }}>{i + 1}</span>,
+    },
+    {
+      title: 'Professional', key: 'name',
+      render: (_, r) => (
+        <Space>
+          <Avatar size="small" icon={<UserOutlined />} style={{ background: r.key === 'unassigned' ? '#bbb' : '#1890ff' }} />
+          <div>
+            <div style={{ fontWeight: 600 }}>{r.name}</div>
+            {r.jobTitle && <div style={{ fontSize: 11, color: '#888' }}>{r.jobTitle}</div>}
+          </div>
+        </Space>
+      ),
+      sorter: (a, b) => a.name.localeCompare(b.name),
+    },
+    {
+      title: 'Total', dataIndex: 'total', key: 'total', width: 80, align: 'center',
+      sorter: (a, b) => a.total - b.total,
+      render: (v) => <Tag color="blue">{v}</Tag>,
+    },
+    {
+      title: 'Completed', dataIndex: 'completed', key: 'completed', width: 100, align: 'center',
+      sorter: (a, b) => a.completed - b.completed,
+      render: (v) => <Tag color="success">{v}</Tag>,
+    },
+    {
+      title: 'Delayed', dataIndex: 'delayed', key: 'delayed', width: 90, align: 'center',
+      sorter: (a, b) => a.delayed - b.delayed,
+      render: (v) => <Tag color={v > 0 ? 'error' : 'default'}>{v}</Tag>,
+    },
+    {
+      title: 'In Progress', dataIndex: 'inprogress', key: 'inprogress', width: 110, align: 'center',
+      sorter: (a, b) => a.inprogress - b.inprogress,
+      render: (v) => <Tag color="warning">{v}</Tag>,
+    },
+    {
+      title: 'Backlog', dataIndex: 'backlog', key: 'backlog', width: 90, align: 'center',
+      sorter: (a, b) => a.backlog - b.backlog,
+      render: (v) => <Tag color="processing">{v}</Tag>,
+    },
+    {
+      title: 'On-Time Rate', key: 'ontime', width: 120, align: 'center',
+      sorter: (a, b) => {
+        const ra = a.completed > 0 ? a.onTime / a.completed : 0;
+        const rb = b.completed > 0 ? b.onTime / b.completed : 0;
+        return ra - rb;
+      },
+      render: (_, r) => {
+        if (r.completed === 0) return <span style={{ color: '#bbb' }}>—</span>;
+        const pct = Math.round((r.onTime / r.completed) * 100);
+        return (
+          <Progress
+            percent={pct}
+            size="small"
+            strokeColor={pct >= 80 ? COLOR.completed : pct >= 50 ? COLOR.inprogress : COLOR.delayed}
+            style={{ marginBottom: 0 }}
+          />
+        );
+      },
+    },
+    {
+      title: 'Load', key: 'load', width: 130,
+      sorter: (a, b) => a.total - b.total,
+      render: (_, r) => {
+        const maxTotal = assignedToBreakdown[0]?.total || 1;
+        const pct = Math.round((r.total / maxTotal) * 100);
+        return (
+          <Progress
+            percent={pct}
+            size="small"
+            strokeColor={pct >= 80 ? COLOR.delayed : pct >= 50 ? COLOR.inprogress : COLOR.completed}
+            format={() => `${r.total} tasks`}
+          />
+        );
+      },
+    },
+  ];
+
+  // ── Assigned-To expanded task sub-table ──────────────────────────────────────
+  const assignedExpandColumns = [
+    {
+      title: 'Project', dataIndex: 'projectTitle', key: 'proj', width: 160,
+      render: (v) => <span style={{ fontWeight: 600 }}>{v}</span>,
+    },
+    { title: 'Task', dataIndex: 'taskTitle', key: 'task', width: 200 },
+    {
+      title: 'Priority', dataIndex: 'priority', key: 'pri', width: 90,
+      render: (v) => PRIORITY_TAG[v] || <Tag>{v}</Tag>,
+    },
+    { title: 'Stage', dataIndex: 'stage', key: 'stage', width: 110, render: (v) => <Tag>{v || '—'}</Tag> },
+    {
+      title: 'Status', dataIndex: 'classification', key: 'cls', width: 120,
+      render: (v) => CLASSIF_TAG[v] || <Tag>{v}</Tag>,
+    },
+    {
+      title: 'Progress', key: 'prog', width: 120,
+      render: (_, r) => {
+        const pct = r.weight > 0 ? Math.min(100, Math.round((r.actual / r.weight) * 100)) : 0;
+        return <Progress percent={pct} size="small" strokeColor={pct === 100 ? COLOR.completed : COLOR.inprogress} />;
+      },
+    },
+    {
+      title: 'Submission Date', dataIndex: 'submissionDate', key: 'sd', width: 140,
+      render: (v) => v ? dayjs(v).format('DD MMM YYYY') : '—',
+    },
+    {
+      title: 'On Time', dataIndex: 'isOnTime', key: 'ot', width: 90,
+      render: (v, r) => {
+        if (r.classification !== 'completed') return <span style={{ color: '#bbb' }}>—</span>;
+        return v
+          ? <CheckCircleOutlined style={{ color: COLOR.completed, fontSize: 16 }} />
+          : <WarningOutlined     style={{ color: COLOR.delayed,   fontSize: 16 }} />;
+      },
+    },
+  ];
+
   // ── Requirement doughnut chart data ───────────────────────────────────────
   const reqDoughnutData = requirementSummary
     ? {
@@ -669,8 +849,68 @@ export default function GeneralReport() {
     });
     [20, 22, 22, 14, 14, 22, 18, 18].forEach((w, i) => { reqSheet.getColumn(i + 1).width = w; });
 
+    // ── Sheet 5: Assigned-To Breakdown ──────────────────────────────────────
+    const assignedSheet = workbook.addWorksheet('Assigned To');
+    const assignedHeaders = assignedSheet.addRow([
+      '#', 'Professional', 'Job Title',
+      'Total Tasks', 'Completed', 'Delayed', 'In Progress', 'Backlog',
+      'On-Time (completed)', 'On-Time Rate %',
+    ]);
+    assignedHeaders.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    assignedHeaders.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064E3B' } };
+    assignedHeaders.alignment = { horizontal: 'center' };
+
+    assignedToBreakdown.forEach((p, i) => {
+      const onTimeRate = p.completed > 0 ? Math.round((p.onTime / p.completed) * 100) : 0;
+      const row = assignedSheet.addRow([
+        i + 1,
+        p.name,
+        p.jobTitle || '',
+        p.total,
+        p.completed,
+        p.delayed,
+        p.inprogress,
+        p.backlog,
+        p.onTime,
+        `${onTimeRate}%`,
+      ]);
+      if (i % 2 === 0) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
+      if (p.delayed > 0) row.getCell(6).font = { color: { argb: 'FFDC2626' }, bold: true };
+    });
+
+    // Sub-task detail rows grouped by person
+    assignedSheet.addRow([]);
+    const assignedDetailHeader = assignedSheet.addRow([
+      'Professional', 'Project', 'Task', 'Priority', 'Stage',
+      'Status', 'On Time', 'Progress %', 'Submission Date',
+    ]);
+    assignedDetailHeader.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    assignedDetailHeader.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A3A2A' } };
+
+    let assignedRowIdx = 0;
+    assignedToBreakdown.forEach((p) => {
+      p.tasks.forEach((t) => {
+        const pct = t.weight > 0 ? Math.min(100, Math.round((t.actual / t.weight) * 100)) : 0;
+        const row = assignedSheet.addRow([
+          p.name,
+          t.projectTitle,
+          t.taskTitle,
+          t.priority,
+          t.stage || '',
+          t.classification,
+          t.isOnTime == null ? '' : t.isOnTime ? 'Yes' : 'No',
+          pct,
+          t.submissionDate ? dayjs(t.submissionDate).format('DD MMM YYYY') : '',
+        ]);
+        if (assignedRowIdx % 2 === 0) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
+        if (t.classification === 'delayed') row.getCell(6).font = { color: { argb: 'FFDC2626' }, bold: true };
+        assignedRowIdx++;
+      });
+    });
+    [6, 25, 20, 10, 14, 14, 10, 12, 18].forEach((w, i) => { assignedSheet.getColumn(i + 1).width = w; });
+
     // ── Add borders to all sheets ────────────────────────────────────────────
-    [summarySheet, projSheet, taskSheet, reqSheet].forEach((ws) => {
+    [summarySheet, projSheet, taskSheet, reqSheet, assignedSheet].forEach((ws) => {
       ws.eachRow((row) => {
         row.eachCell((cell) => {
           cell.border = {
@@ -741,6 +981,37 @@ export default function GeneralReport() {
       </tr>`;
     }).join('');
 
+    // ── Build assigned-to rows for PDF ──────────────────────────────────────
+    const assignedPdfSummaryRows = assignedToBreakdown.map((p, i) => {
+      const onTimeRate = p.completed > 0 ? Math.round((p.onTime / p.completed) * 100) : 0;
+      return `<tr>
+        <td>${i + 1}</td>
+        <td style="font-weight:600">${p.name}${p.jobTitle ? `<br/><span style="font-size:9px;color:#888">${p.jobTitle}</span>` : ''}</td>
+        <td style="text-align:center">${p.total}</td>
+        <td style="text-align:center;color:#16a34a;font-weight:600">${p.completed}</td>
+        <td style="text-align:center;color:${p.delayed>0?'#dc2626':'#555'};font-weight:600">${p.delayed}</td>
+        <td style="text-align:center;color:#d97706;font-weight:600">${p.inprogress}</td>
+        <td style="text-align:center">${p.backlog}</td>
+        <td style="text-align:center">${onTimeRate}%</td>
+      </tr>`;
+    }).join('');
+
+    const assignedPdfDetailRows = assignedToBreakdown.flatMap((p) =>
+      p.tasks.map((t) => {
+        const pct = t.weight > 0 ? Math.min(100, Math.round((t.actual / t.weight) * 100)) : 0;
+        return `<tr class="${t.classification === 'delayed' ? 'delayed-row' : ''}">
+          <td style="font-weight:600">${p.name}</td>
+          <td>${t.projectTitle || ''}</td>
+          <td>${t.taskTitle || ''}</td>
+          <td>${t.priority || ''}</td>
+          <td>${t.stage || ''}</td>
+          <td style="color:${t.classification==='delayed'?'#dc2626':t.classification==='completed'?'#16a34a':'#d97706'};font-weight:600">${t.classification}</td>
+          <td style="text-align:center">${pct}%</td>
+          <td>${t.submissionDate ? dayjs(t.submissionDate).format('DD MMM YYYY') : '—'}</td>
+        </tr>`;
+      })
+    ).join('');
+
     printWindow.document.write(`<!DOCTYPE html><html><head>
       <meta charset="utf-8"/>
       <title>General Project Report — ${now}</title>
@@ -807,6 +1078,25 @@ export default function GeneralReport() {
           <th>Progress</th><th>Submission Date</th>
         </tr></thead>
         <tbody>${taskRows}</tbody>
+      </table>
+
+      <div class="page-break"></div>
+      <h2>👤 Tasks by Professional (Assigned To)</h2>
+      <table>
+        <thead><tr>
+          <th>#</th><th>Professional</th><th>Total</th>
+          <th>Completed</th><th>Delayed</th><th>In Progress</th><th>Backlog</th><th>On-Time Rate</th>
+        </tr></thead>
+        <tbody>${assignedPdfSummaryRows || '<tr><td colspan="8" style="text-align:center;color:#888">No data</td></tr>'}</tbody>
+      </table>
+
+      <h2>Task Detail by Professional</h2>
+      <table>
+        <thead><tr>
+          <th>Professional</th><th>Project</th><th>Task</th><th>Priority</th>
+          <th>Stage</th><th>Status</th><th>Progress</th><th>Submission Date</th>
+        </tr></thead>
+        <tbody>${assignedPdfDetailRows || '<tr><td colspan="8" style="text-align:center;color:#888">No data</td></tr>'}</tbody>
       </table>
 
       <div class="page-break"></div>
@@ -1090,6 +1380,65 @@ export default function GeneralReport() {
             rowClassName={(r) => r.classification === 'delayed' ? 'ant-table-row-danger' : ''}
           />
         </Card>
+
+        {/* ════════════════════════════════════════════════════════════════════
+            ASSIGNED-TO (PROFESSIONAL) SECTION
+        ════════════════════════════════════════════════════════════════════ */}
+        <Divider orientation="left" style={{ fontWeight: 700, fontSize: 16, marginTop: 36, color: '#1a3a6c' }}>
+          <UserOutlined style={{ marginRight: 6 }} />
+          Tasks by Professional (Assigned To)
+        </Divider>
+
+        {assignedToBreakdown.length === 0 ? (
+          <Empty description="No assigned task data available" style={{ margin: '24px 0' }} />
+        ) : (
+          <>
+            {/* ── Per-person stacked bar chart ─────────────────────────── */}
+            <Card
+              title="Task Load per Professional"
+              bordered={false}
+              style={{ borderRadius: 8, marginBottom: 20, borderTop: '3px solid #1890ff' }}
+              bodyStyle={{ height: Math.max(260, assignedToBreakdown.length * 36 + 60) }}
+            >
+              <Bar
+                data={assignedBarData}
+                options={assignedBarOptions}
+                style={{ height: Math.max(220, assignedToBreakdown.length * 36) }}
+              />
+            </Card>
+
+            {/* ── Summary table: one row per professional ───────────────── */}
+            <Divider orientation="left" style={{ fontWeight: 600 }}>
+              Summary — {assignedToBreakdown.length} professional{assignedToBreakdown.length !== 1 ? 's' : ''}
+            </Divider>
+            <Card bordered={false} style={{ borderRadius: 8, marginBottom: 20 }}>
+              <Table
+                rowKey="key"
+                columns={assignedSummaryColumns}
+                dataSource={assignedToBreakdown}
+                pagination={false}
+                scroll={{ x: 900 }}
+                size="middle"
+                rowClassName={(r) => r.delayed > 0 ? 'ant-table-row-danger' : ''}
+                expandable={{
+                  expandedRowRender: (record) => (
+                    <Table
+                      rowKey="taskId"
+                      columns={assignedExpandColumns}
+                      dataSource={record.tasks}
+                      pagination={{ pageSize: 8, showSizeChanger: true }}
+                      scroll={{ x: 900 }}
+                      size="small"
+                      style={{ margin: '8px 0' }}
+                      rowClassName={(r) => r.classification === 'delayed' ? 'ant-table-row-danger' : ''}
+                    />
+                  ),
+                  rowExpandable: (record) => record.tasks.length > 0,
+                }}
+              />
+            </Card>
+          </>
+        )}
 
         {/* ════════════════════════════════════════════════════════════════════
             REQUIREMENT WORKFLOW SECTION
