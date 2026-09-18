@@ -31,6 +31,7 @@ router.route('/user/update/:id').patch(catchErrors(userController.update));
 router.route('/user/delete/:id').delete(catchErrors(userController.delete));
 router.route('/user/search').get(catchErrors(userController.search));
 router.route('/user/list').get(catchErrors(userController.list));
+router.route('/user/listAll').get(catchErrors(userController.listAll));
 router.route('/user/filter').get(catchErrors(userController.filter));
 router.route('/user/change-password/:id').patch(catchErrors(userController.changePassword));
 router.route('/user/status/:id').patch(catchErrors(userController.status));
