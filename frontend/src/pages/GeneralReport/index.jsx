@@ -107,6 +107,25 @@ export default function GeneralReport() {
     });
   }, []);
 
+  // ── Fetch team member list for Assigned To dropdown ─────────────────────────
+  const [userOptions, setUserOptions] = useState([]);
+  useEffect(() => {
+    request.listAll({ entity: 'user' }).then((res) => {
+      if (res?.result) {
+        setUserOptions(
+          res.result
+            .filter((u) => u.enabled !== false && u.removed !== true)
+            .map((u) => ({
+              _id:      u._id,
+              name:     `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+              jobTitle: u.jobTitle || '',
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+        );
+      }
+    });
+  }, []);
+
   // ── Fetch analytics ──────────────────────────────────────────────────────────
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
@@ -145,21 +164,6 @@ export default function GeneralReport() {
     if (projectSearch && !t.projectTitle?.toLowerCase().includes(projectSearch.toLowerCase())) return false;
     return true;
   });
-
-  // ── Unique user options for Assigned To dropdown (derived from all task data) ─
-  const assignedToOptions = useMemo(() => {
-    const seen = new Map();
-    for (const t of taskDetails) {
-      if (t.assignedTo?._id && !seen.has(t.assignedTo._id)) {
-        seen.set(t.assignedTo._id, {
-          _id:      t.assignedTo._id,
-          name:     t.assignedTo.name,
-          jobTitle: t.assignedTo.jobTitle || '',
-        });
-      }
-    }
-    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [taskDetails]);
 
   // ── Assigned-To breakdown (derived from filteredTasks — no extra API call) ──
   const assignedToBreakdown = useMemo(() => {
@@ -1249,27 +1253,15 @@ export default function GeneralReport() {
               value={assignedToFilter || undefined}
               onChange={(v) => setAssignedToFilter(v || '')}
               filterOption={(input, opt) =>
-                String(opt.label).toLowerCase().includes(input.toLowerCase())
+                String(opt.children).toLowerCase().includes(input.toLowerCase())
               }
-              options={assignedToOptions.map((u) => ({
-                value: u._id,
-                label: u.name,
-                title: u.jobTitle,
-              }))}
-              optionRender={(opt) => (
-                <Space>
-                  <UserOutlined style={{ color: '#1890ff' }} />
-                  <span>
-                    {opt.label}
-                    {opt.data.title && (
-                      <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>
-                        {opt.data.title}
-                      </span>
-                    )}
-                  </span>
-                </Space>
-              )}
-            />
+            >
+              {userOptions.map((u) => (
+                <Option key={u._id} value={u._id}>
+                  {u.name}{u.jobTitle ? ` — ${u.jobTitle}` : ''}
+                </Option>
+              ))}
+            </Select>
           </Col>
           <Col xs={24} sm={24} md={5} style={{ display: 'flex', gap: 8, paddingTop: 20 }}>
             <Button type="primary" icon={<SearchOutlined />} onClick={fetchAnalytics} loading={loading}>
