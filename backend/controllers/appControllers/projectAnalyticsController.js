@@ -130,15 +130,26 @@ exports.getAnalytics = async (req, res) => {
     const taskDetails = [];
 
     for (const project of projects) {
-      totalBudget       += Number(project.totalBudget)  || 0;
-      totalActualBudget += Number(project.actualBudget) || 0;
-
       let pCompleted  = 0;
       let pDelayed    = 0;
       let pInProgress = 0;
       let pBacklog    = 0;
 
       const activeTasks = (project.task || []).filter((t) => t.assignedStatus === 'active');
+
+      // ── When filtering by assignedTo, skip projects where that person
+      //    has NO tasks assigned — being a team member is not enough ──────────
+      if (assignedToId) {
+        const hasTask = activeTasks.some((t) => {
+          const tid = t.assignedTo ? String(t.assignedTo._id || t.assignedTo) : null;
+          return tid === assignedToId;
+        });
+        if (!hasTask) continue;
+      }
+
+      // Only count budget for projects that pass the filter
+      totalBudget       += Number(project.totalBudget)  || 0;
+      totalActualBudget += Number(project.actualBudget) || 0;
 
       for (const task of activeTasks) {
         // Optional: filter by assignedTo
