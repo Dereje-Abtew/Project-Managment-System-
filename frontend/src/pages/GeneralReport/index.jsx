@@ -82,12 +82,13 @@ export default function GeneralReport() {
   const getColumnSearchProps = useColumnSearch();
 
   // ── Filter state ────────────────────────────────────────────────────────────
-  const [dateRange,     setDateRange]     = useState(null);   // [dayjs, dayjs] | null
-  const [projectId,     setProjectId]     = useState('');
-  const [statusFilter,  setStatusFilter]  = useState('');
-  const [priorityFilter,setPriorityFilter]= useState('');
-  const [classifFilter, setClassifFilter] = useState('');     // completed|delayed|inprogress|backlog
-  const [projectSearch, setProjectSearch] = useState('');     // project title text search
+  const [dateRange,       setDateRange]       = useState(null);   // [dayjs, dayjs] | null
+  const [projectId,       setProjectId]       = useState('');
+  const [statusFilter,    setStatusFilter]    = useState('');
+  const [priorityFilter,  setPriorityFilter]  = useState('');
+  const [classifFilter,   setClassifFilter]   = useState('');   // completed|delayed|inprogress|backlog
+  const [assignedToFilter,setAssignedToFilter]= useState('');   // user _id
+  const [projectSearch,   setProjectSearch]   = useState('');   // project title text search
 
   // ── Data state ──────────────────────────────────────────────────────────────
   const [loading,            setLoading]            = useState(false);
@@ -113,9 +114,10 @@ export default function GeneralReport() {
       const params = new URLSearchParams();
       if (dateRange?.[0]) params.append('startDate', dateRange[0].toISOString());
       if (dateRange?.[1]) params.append('endDate',   dateRange[1].toISOString());
-      if (projectId)       params.append('projectId',  projectId);
-      if (statusFilter)    params.append('status',     statusFilter);
-      if (priorityFilter)  params.append('priority',   priorityFilter);
+      if (projectId)         params.append('projectId',  projectId);
+      if (statusFilter)      params.append('status',     statusFilter);
+      if (priorityFilter)    params.append('priority',   priorityFilter);
+      if (assignedToFilter)  params.append('assignedTo', assignedToFilter);
 
       const qs = params.toString();
       const res = await request.get({ entity: `project-report/analytics${qs ? '?' + qs : ''}` });
@@ -133,7 +135,7 @@ export default function GeneralReport() {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, projectId, statusFilter, priorityFilter]);
+  }, [dateRange, projectId, statusFilter, priorityFilter, assignedToFilter]);
 
   useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
 
@@ -143,6 +145,21 @@ export default function GeneralReport() {
     if (projectSearch && !t.projectTitle?.toLowerCase().includes(projectSearch.toLowerCase())) return false;
     return true;
   });
+
+  // ── Unique user options for Assigned To dropdown (derived from all task data) ─
+  const assignedToOptions = useMemo(() => {
+    const seen = new Map();
+    for (const t of taskDetails) {
+      if (t.assignedTo?._id && !seen.has(t.assignedTo._id)) {
+        seen.set(t.assignedTo._id, {
+          _id:      t.assignedTo._id,
+          name:     t.assignedTo.name,
+          jobTitle: t.assignedTo.jobTitle || '',
+        });
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [taskDetails]);
 
   // ── Assigned-To breakdown (derived from filteredTasks — no extra API call) ──
   const assignedToBreakdown = useMemo(() => {
@@ -1222,6 +1239,38 @@ export default function GeneralReport() {
               <Option value="backlog">Backlog</Option>
             </Select>
           </Col>
+          <Col xs={24} sm={12} md={4}>
+            <div style={{ fontSize: 12, color: '#555', marginBottom: 4 }}>Assigned To</div>
+            <Select
+              showSearch
+              allowClear
+              style={{ width: '100%' }}
+              placeholder="All Professionals"
+              value={assignedToFilter || undefined}
+              onChange={(v) => setAssignedToFilter(v || '')}
+              filterOption={(input, opt) =>
+                String(opt.label).toLowerCase().includes(input.toLowerCase())
+              }
+              options={assignedToOptions.map((u) => ({
+                value: u._id,
+                label: u.name,
+                title: u.jobTitle,
+              }))}
+              optionRender={(opt) => (
+                <Space>
+                  <UserOutlined style={{ color: '#1890ff' }} />
+                  <span>
+                    {opt.label}
+                    {opt.data.title && (
+                      <span style={{ fontSize: 11, color: '#888', marginLeft: 6 }}>
+                        {opt.data.title}
+                      </span>
+                    )}
+                  </span>
+                </Space>
+              )}
+            />
+          </Col>
           <Col xs={24} sm={24} md={5} style={{ display: 'flex', gap: 8, paddingTop: 20 }}>
             <Button type="primary" icon={<SearchOutlined />} onClick={fetchAnalytics} loading={loading}>
               Search
@@ -1229,6 +1278,7 @@ export default function GeneralReport() {
             <Button icon={<ReloadOutlined />} onClick={() => {
               setDateRange(null); setProjectId(''); setStatusFilter('');
               setPriorityFilter(''); setClassifFilter(''); setProjectSearch('');
+              setAssignedToFilter('');
             }}>
               Reset
             </Button>
