@@ -152,11 +152,10 @@ exports.getAnalytics = async (req, res) => {
       totalActualBudget += Number(project.actualBudget) || 0;
 
       for (const task of activeTasks) {
-        // Optional: filter by assignedTo
+        // Optional: filter by assignedTo — also skip tasks with no assignee
         if (assignedToId) {
-          const taskAssignedTo = task.assignedTo
-            ? String(task.assignedTo._id || task.assignedTo)
-            : null;
+          if (!task.assignedTo) continue;
+          const taskAssignedTo = String(task.assignedTo._id || task.assignedTo);
           if (taskAssignedTo !== assignedToId) continue;
         }
 

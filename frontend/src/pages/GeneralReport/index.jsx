@@ -97,9 +97,6 @@ export default function GeneralReport() {
   const [monthlyTrend,       setMonthlyTrend]       = useState([]);
   const [taskDetails,        setTaskDetails]        = useState([]);
   const [projectOptions,     setProjectOptions]     = useState([]); // for project dropdown
-  const [requirementSummary, setRequirementSummary] = useState(null);
-  const [requirementDetails, setRequirementDetails] = useState([]);
-
   // ── Fetch project list for dropdown ─────────────────────────────────────────
   useEffect(() => {
     request.list({ entity: 'project', options: { page: 1, items: 200 } }).then((res) => {
@@ -146,8 +143,6 @@ export default function GeneralReport() {
         setProjectBreakdowns(res.projectBreakdowns || []);
         setMonthlyTrend(res.monthlyTrend || []);
         setTaskDetails(res.taskDetails || []);
-        setRequirementSummary(res.requirementSummary || null);
-        setRequirementDetails(res.requirementDetails || []);
       }
     } catch (err) {
       console.error('Analytics fetch error:', err);
@@ -467,68 +462,6 @@ export default function GeneralReport() {
     },
   ];
 
-  // ── Requirement status colors ─────────────────────────────────────────────
-  const REQ_STATUS_COLOR = {
-    submitted:           'orange',
-    approved:            'green',
-    rejected:            'red',
-    enhancement_pending: 'blue',
-    implemented:         'purple',
-  };
-
-  // ── Requirement detail table columns ─────────────────────────────────────
-  const reqColumns = [
-    {
-      title: '#', key: 'serial', width: 50, align: 'center',
-      render: (_, __, i) => <span style={{ color: '#888' }}>{i + 1}</span>,
-    },
-    {
-      title: 'Sender', dataIndex: 'senderName', key: 'senderName', width: 160,
-      ...getColumnSearchProps('senderName'),
-    },
-    {
-      title: 'Stakeholder', dataIndex: 'stakeholder', key: 'sp', width: 160,
-      ...getColumnSearchProps('stakeholder'),
-      render: (v) => v ? <Tag color="geekblue">{v}</Tag> : <span style={{ color: '#bbb' }}>—</span>,
-    },
-    {
-      title: 'Status', dataIndex: 'status', key: 'status', width: 150,
-      filters: [
-        { text: 'Submitted',           value: 'submitted'           },
-        { text: 'Approved',            value: 'approved'            },
-        { text: 'Rejected',            value: 'rejected'            },
-        { text: 'Enhancement Pending', value: 'enhancement_pending' },
-        { text: 'Implemented',         value: 'implemented'         },
-      ],
-      onFilter: (val, r) => r.status === val,
-      render: (v) => (
-        <Tag color={REQ_STATUS_COLOR[v] || 'default'} style={{ textTransform: 'capitalize', fontWeight: 500 }}>
-          {(v || '').replace(/_/g, ' ')}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Enhancement', dataIndex: 'isEnhancement', key: 'enh', width: 120,
-      render: (v) => v ? <Tag color="cyan">Enhancement</Tag> : <span style={{ color: '#bbb' }}>—</span>,
-    },
-    {
-      title: 'Attachments', dataIndex: 'attachmentCount', key: 'attCount', width: 110, align: 'center',
-      render: (v) => <Tag>{v}</Tag>,
-    },
-    {
-      title: 'Submitted At', dataIndex: 'submittedAt', key: 'submittedAt', width: 160,
-      sorter: (a, b) => new Date(a.submittedAt) - new Date(b.submittedAt),
-      render: (v) => v ? dayjs(v).format('DD MMM YYYY HH:mm') : '—',
-    },
-    {
-      title: 'Approved At', dataIndex: 'approvedAt', key: 'approvedAt', width: 150,
-      render: (v) => v ? dayjs(v).format('DD MMM YYYY') : <span style={{ color: '#bbb' }}>—</span>,
-    },
-    {
-      title: 'Rejected At', dataIndex: 'rejectedAt', key: 'rejectedAt', width: 150,
-      render: (v) => v ? dayjs(v).format('DD MMM YYYY') : <span style={{ color: '#bbb' }}>—</span>,
-    },
-  ];
 
   // ── Chart: Assigned-To stacked bar ──────────────────────────────────────────
   const assignedBarData = assignedToBreakdown.length > 0
@@ -679,24 +612,6 @@ export default function GeneralReport() {
     },
   ];
 
-  // ── Requirement doughnut chart data ───────────────────────────────────────
-  const reqDoughnutData = requirementSummary
-    ? {
-        labels: ['Approved', 'Submitted', 'Rejected', 'Enhancement Pending', 'Implemented'],
-        datasets: [{
-          data: [
-            requirementSummary.approved,
-            requirementSummary.submitted,
-            requirementSummary.rejected,
-            requirementSummary.enhancementPending,
-            requirementSummary.implemented,
-          ],
-          backgroundColor: ['#52c41a', '#faad14', '#f5222d', '#1890ff', '#722ed1'],
-          borderWidth: 2,
-        }],
-      }
-    : null;
-
   // ── Excel Export ─────────────────────────────────────────────────────────────
   const handleExportExcel = async () => {
     const workbook = new ExcelJS.Workbook();
@@ -817,59 +732,6 @@ export default function GeneralReport() {
     });
     [20,25,20,10,14,14,10,14,12,10,10,14,14,16,16].forEach((w, i) => { taskSheet.getColumn(i+1).width = w; });
 
-    // ── Sheet 4: Requirement Summary ─────────────────────────────────────────
-    const reqSheet = workbook.addWorksheet('Requirement Summary');
-    const reqSumHeaders = reqSheet.addRow(['Metric', 'Value']);
-    reqSumHeaders.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    reqSumHeaders.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064E3B' } };
-
-    const reqKpis = [
-      ['Total Requirements',       requirementSummary?.total              ?? 0],
-      ['Submitted (Pending Review)',requirementSummary?.submitted          ?? 0],
-      ['Approved',                 requirementSummary?.approved           ?? 0],
-      ['Rejected',                 requirementSummary?.rejected           ?? 0],
-      ['Enhancement Pending',      requirementSummary?.enhancementPending ?? 0],
-      ['Implemented',              requirementSummary?.implemented        ?? 0],
-      ['Approval Rate',            `${requirementSummary?.approvalRate    ?? 0}%`],
-      ['Rejection Rate',           `${requirementSummary?.rejectionRate   ?? 0}%`],
-      ['Templates Uploaded (Total)',requirementSummary?.templatesUploaded ?? 0],
-      ['Global Templates',         requirementSummary?.globalTemplates    ?? 0],
-      ['Provider-Specific Templates',requirementSummary?.specificTemplates ?? 0],
-    ];
-    reqKpis.forEach(([k, v], i) => {
-      const row = reqSheet.addRow([k, v]);
-      if (i % 2 === 0) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
-    });
-    reqSheet.addRow([]);
-
-    // Requirement detail rows
-    const reqDetHeaders = reqSheet.addRow([
-      'Sender', 'Stakeholder', 'Status', 'Enhancement?', 'Attachments', 'Submitted At', 'Approved At', 'Rejected At',
-    ]);
-    reqDetHeaders.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-    reqDetHeaders.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A3A2A' } };
-
-    requirementDetails.forEach((r, i) => {
-      const row = reqSheet.addRow([
-        r.senderName,
-        r.stakeholder,
-        (r.status || '').replace(/_/g, ' '),
-        r.isEnhancement ? 'Yes' : 'No',
-        r.attachmentCount,
-        r.submittedAt ? dayjs(r.submittedAt).format('DD MMM YYYY HH:mm') : '',
-        r.approvedAt  ? dayjs(r.approvedAt).format('DD MMM YYYY')  : '',
-        r.rejectedAt  ? dayjs(r.rejectedAt).format('DD MMM YYYY')  : '',
-      ]);
-      if (i % 2 === 0) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FDF4' } };
-      if (r.status === 'rejected') {
-        row.getCell(3).font = { color: { argb: 'FFDC2626' }, bold: true };
-      }
-      if (r.status === 'approved') {
-        row.getCell(3).font = { color: { argb: 'FF16A34A' }, bold: true };
-      }
-    });
-    [20, 22, 22, 14, 14, 22, 18, 18].forEach((w, i) => { reqSheet.getColumn(i + 1).width = w; });
-
     // ── Sheet 5: Assigned-To Breakdown ──────────────────────────────────────
     const assignedSheet = workbook.addWorksheet('Assigned To');
     const assignedHeaders = assignedSheet.addRow([
@@ -931,7 +793,7 @@ export default function GeneralReport() {
     [6, 25, 20, 10, 14, 14, 10, 12, 18].forEach((w, i) => { assignedSheet.getColumn(i + 1).width = w; });
 
     // ── Add borders to all sheets ────────────────────────────────────────────
-    [summarySheet, projSheet, taskSheet, reqSheet, assignedSheet].forEach((ws) => {
+    [summarySheet, projSheet, taskSheet, assignedSheet].forEach((ws) => {
       ws.eachRow((row) => {
         row.eachCell((cell) => {
           cell.border = {
@@ -1120,49 +982,6 @@ export default function GeneralReport() {
         <tbody>${assignedPdfDetailRows || '<tr><td colspan="8" style="text-align:center;color:#888">No data</td></tr>'}</tbody>
       </table>
 
-      <div class="page-break"></div>
-      <h2>Requirement Summary</h2>
-      <table class="summary-table">
-        <tbody>
-          ${[
-            ['Total Requirements',        requirementSummary?.total              ?? 0],
-            ['Submitted (Pending Review)', requirementSummary?.submitted          ?? 0],
-            ['Approved',                  requirementSummary?.approved           ?? 0],
-            ['Rejected',                  requirementSummary?.rejected           ?? 0],
-            ['Enhancement Pending',       requirementSummary?.enhancementPending ?? 0],
-            ['Implemented',               requirementSummary?.implemented        ?? 0],
-            ['Approval Rate',             `${requirementSummary?.approvalRate    ?? 0}%`],
-            ['Rejection Rate',            `${requirementSummary?.rejectionRate   ?? 0}%`],
-            ['Templates Uploaded',        requirementSummary?.templatesUploaded  ?? 0],
-            ['Global Templates',          requirementSummary?.globalTemplates    ?? 0],
-            ['Provider-Specific Templates',requirementSummary?.specificTemplates ?? 0],
-          ].map(([k, v]) => `<tr><td><b>${k}</b></td><td>${v}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <h2>Requirement Details (${requirementDetails.length})</h2>
-      <table>
-        <thead><tr>
-          <th>#</th><th>Sender</th><th>Stakeholder</th><th>Status</th>
-          <th>Enhancement?</th><th>Attachments</th><th>Submitted At</th><th>Approved At</th><th>Rejected At</th>
-        </tr></thead>
-        <tbody>
-          ${requirementDetails.map((r, i) => {
-            const statusColor = { approved:'#16a34a', rejected:'#dc2626', submitted:'#d97706', enhancement_pending:'#1d4ed8', implemented:'#7c3aed' }[r.status] || '#555';
-            return `<tr class="${r.status === 'rejected' ? 'delayed-row' : ''}">
-              <td>${i + 1}</td>
-              <td>${r.senderName || '—'}</td>
-              <td>${r.stakeholder || '—'}</td>
-              <td style="color:${statusColor};font-weight:600">${(r.status || '').replace(/_/g, ' ')}</td>
-              <td>${r.isEnhancement ? '✓' : '—'}</td>
-              <td style="text-align:center">${r.attachmentCount}</td>
-              <td>${r.submittedAt ? dayjs(r.submittedAt).format('DD MMM YYYY HH:mm') : '—'}</td>
-              <td>${r.approvedAt  ? dayjs(r.approvedAt).format('DD MMM YYYY')  : '—'}</td>
-              <td>${r.rejectedAt  ? dayjs(r.rejectedAt).format('DD MMM YYYY')  : '—'}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
     </body></html>`);
 
     printWindow.document.close();
@@ -1481,136 +1300,6 @@ export default function GeneralReport() {
             </Card>
           </>
         )}
-
-        {/* ════════════════════════════════════════════════════════════════════
-            REQUIREMENT WORKFLOW SECTION
-        ════════════════════════════════════════════════════════════════════ */}
-        <Divider orientation="left" style={{ fontWeight: 700, fontSize: 16, marginTop: 36, color: '#1a5c38' }}>
-          📋 Requirement Workflow Summary
-        </Divider>
-
-        {/* ── Requirement KPI Cards ─────────────────────────────────────── */}
-        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Total Requirements" value={requirementSummary?.total}
-              color="#1890ff" icon={<ProjectOutlined />} />
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Submitted" value={requirementSummary?.submitted}
-              color="#faad14" icon={<ClockCircleOutlined />}
-              sub="Awaiting review" />
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Approved" value={requirementSummary?.approved}
-              color={COLOR.completed} icon={<CheckCircleOutlined />}
-              sub={`${requirementSummary?.approvalRate ?? 0}% approval rate`} />
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Rejected" value={requirementSummary?.rejected}
-              color={COLOR.delayed} icon={<WarningOutlined />}
-              sub={`${requirementSummary?.rejectionRate ?? 0}% rejection rate`} />
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Enhancement Pending" value={requirementSummary?.enhancementPending}
-              color={COLOR.backlog} />
-          </Col>
-          <Col xs={12} sm={8} md={4}>
-            <KpiCard title="Templates Uploaded" value={requirementSummary?.templatesUploaded}
-              color={COLOR.budget}
-              sub={`${requirementSummary?.globalTemplates ?? 0} global · ${requirementSummary?.specificTemplates ?? 0} specific`} />
-          </Col>
-        </Row>
-
-        {/* ── Requirement Doughnut + Details ────────────────────────────── */}
-        <Row gutter={[14, 14]} style={{ marginBottom: 20 }}>
-          <Col xs={24} md={8}>
-            <Card title="Requirement Status Distribution" bordered={false}
-              style={{ borderRadius: 8, borderTop: '3px solid #1a5c38' }}
-              bodyStyle={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {reqDoughnutData ? (
-                <Doughnut
-                  data={reqDoughnutData}
-                  options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }}
-                  style={{ maxHeight: 260 }}
-                />
-              ) : (
-                <Empty description="No requirement data" />
-              )}
-            </Card>
-          </Col>
-          <Col xs={24} md={16}>
-            <Card title="Template Coverage" bordered={false}
-              style={{ borderRadius: 8, borderTop: '3px solid #722ed1' }}
-              bodyStyle={{ padding: '16px 20px' }}>
-              <Row gutter={[12, 12]}>
-                <Col span={8}>
-                  <Card bordered={false} style={{ background: '#f9f0ff', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: '#722ed1' }}>
-                      {requirementSummary?.templatesUploaded ?? 0}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#555' }}>Total Templates</div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card bordered={false} style={{ background: '#f6ffed', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: '#1a5c38' }}>
-                      {requirementSummary?.specificTemplates ?? 0}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#555' }}>Provider-Specific</div>
-                  </Card>
-                </Col>
-                <Col span={8}>
-                  <Card bordered={false} style={{ background: '#f0f0ff', borderRadius: 8, textAlign: 'center' }}>
-                    <div style={{ fontSize: 28, fontWeight: 700, color: '#722ed1' }}>
-                      {requirementSummary?.globalTemplates ?? 0}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#555' }}>Global Templates</div>
-                  </Card>
-                </Col>
-              </Row>
-              <Divider style={{ margin: '12px 0' }} />
-              <Progress
-                percent={
-                  requirementSummary?.total > 0
-                    ? Math.round((requirementSummary.approved / requirementSummary.total) * 100)
-                    : 0
-                }
-                strokeColor={{ '0%': '#faad14', '100%': '#52c41a' }}
-                format={(p) => `${p}% Approved`}
-                style={{ marginBottom: 8 }}
-              />
-              <Progress
-                percent={
-                  requirementSummary?.total > 0
-                    ? Math.round((requirementSummary.rejected / requirementSummary.total) * 100)
-                    : 0
-                }
-                strokeColor="#f5222d"
-                format={(p) => `${p}% Rejected`}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* ── Requirement Detail Table ──────────────────────────────────── */}
-        <Divider orientation="left" style={{ fontWeight: 600 }}>
-          Requirement Details &nbsp;
-          <span style={{ fontSize: 12, color: '#888', fontWeight: 400 }}>
-            ({requirementDetails.length} records)
-          </span>
-        </Divider>
-        <Card bordered={false} style={{ borderRadius: 8, marginBottom: 24 }}>
-          <Table
-            rowKey="_id"
-            columns={reqColumns}
-            dataSource={requirementDetails}
-            pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (t) => `${t} requirements` }}
-            scroll={{ x: 1100 }}
-            size="middle"
-            rowClassName={(r) => r.status === 'rejected' ? 'ant-table-row-danger' : ''}
-            locale={{ emptyText: <Empty description="No requirements found" /> }}
-          />
-        </Card>
       </Spin>
     </div>
   );
